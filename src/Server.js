@@ -28,6 +28,13 @@ class Server {
     this.app.get("/", (req, res) => {
       res.render("index");
     })
+
+    this.app.get("/login", (req, res) => {
+      res.render("login");
+    })
+    this.app.get("/register", (req, res) => {
+      res.render("register");
+    })
   }
 }
 
