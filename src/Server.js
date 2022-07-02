@@ -1,4 +1,6 @@
-import express from 'express';
+import express from "express";
+import routes from "./routes/main.js";
+import Database from "./config/Database.js";
 import path from "path";
 import { fileURLToPath } from 'url';
 
@@ -18,16 +20,18 @@ class Server {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
+    //esj
     this.app.set('views', path.join(__dirname, 'views'))
     this.app.set("view engine", "ejs");
-
     this.app.use(express.static(__dirname));
+
+    //database
+    const dataBase = new Database;
+    dataBase.connect();
   }
 
   route() {
-    this.app.get("/", (req, res) => {
-      res.render("index");
-    })
+    this.app.use(routes);
   }
 }
 
