@@ -20,6 +20,8 @@ class Server {
 
     this.app.set('views', path.join(__dirname, 'views'))
     this.app.set("view engine", "ejs");
+
+    this.app.use(express.static(__dirname));
   }
 
   route() {
