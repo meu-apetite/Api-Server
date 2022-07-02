@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "ejs": "^3.1.8",
-    "express": "^4.18.1"
+    "express": "^4.18.1",
+    "mongoose": "^6.4.2"
   },
   "name": "expresso",
   "version": "1.0.0",
