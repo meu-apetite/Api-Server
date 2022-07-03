@@ -1,5 +1,5 @@
 import express from "express";
-import routes from "./routes/main.js";
+import routes from "./routes/index.js";
 import Database from "./config/Database.js";
 import path from "path";
 import { fileURLToPath } from 'url';
@@ -19,6 +19,8 @@ class Server {
   config() {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
+
+    this.app.use(express.urlencoded({ extended: true }));     
 
     //esj
     this.app.set('views', path.join(__dirname, 'views'))

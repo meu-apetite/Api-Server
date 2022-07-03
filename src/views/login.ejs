@@ -1,44 +1,42 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <link rel="stylesheet" href="../public/style/login.css" />
-    <link
-      href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css"
-      rel="stylesheet"
-    />
-  </head>
 
-  <body>
-    <main class="content_box_login">
-      <div class="content_box_second">
-        <div class="mode_light_dark"></div>
-        <div class="content_box_third">
-          <div class="login">
-            <button>Login</button>
-            <button>Sing-up</button>
-          </div>
-          <form action="">
-            <div class="form_area">
-              <div class="inputBox">
-                <label for="email">Email address</label>
-                <input type="text" name="email" id="email" required="" />
-              </div>
-              <div class="inputBox">
-                <label for="Pass">Password</label>
-                <input type="password" name="Pass" id="Pass" required="" />
-              </div>
-            </div>
-          </form>
-          <div class="submit">
-            <span><a href="#">Forgot passcode?</a></span>
-            <button onclick="login()">Login</button>
-          </div>
-        </div>
-      </div>
-    </main>
-  </body>
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Login</title>
+	<link rel="stylesheet" href="../public/style/login.css" />
+	<link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet" />
+</head>
+
+<body>
+	<main class="content_box_login">
+		<div class="content_box_second">
+			<div class="mode_light_dark"></div>
+			<div class="content_box_third">
+				<div class="login">
+					<button>Login</button>
+					<button>Sing-up</button>
+				</div>
+
+				<form action="/login" method="post">
+					<div class="form_area">
+						<div class="inputBox">
+							<label for="email">Email address</label>
+							<input type="text" name="email" id="email" required />
+						</div>
+
+						<div class="inputBox">
+							<label for="Pass">Password</label>
+							<input type="password" name="Pass" id="password" required />
+						</div>
+					</div>
+
+					<button>Login</button>
+				</form>
+			</div>
+		</div>
+	</main>
+</body>
 </html>

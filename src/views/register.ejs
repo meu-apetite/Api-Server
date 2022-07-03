@@ -1,79 +1,43 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <link rel="stylesheet" href="../public/style/register.css">
-    <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Register</title>
+	<link rel="stylesheet" href="../public/style/register.css">
+	<link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
 </head>
+
 <body>
-    <main class="content_box_login">
-        <div class="content_box_second">
-            <div class="content_box_third">
-                <div class="login">
-                    <button>Login</button>
-                    <button>Sing-up</button>
-                </div>
-                <form action="">
-                    <div class="form_area">
-                        <div class="inputBox">
-                            <label for="propietario">Propietario</label>
-                            <input type="text" name="propietario" id="propietario" required="" placeholder="Nome do Propietario">
-                        </div>
-                        <div class="inputBox">
-                            <label for="loja">Nome da loja</label>
-                            <input type="text" name="loja" id="loja" required="" placeholder="Nome da Loja">
-                        </div>
-                        <div class="inputBox">
-                            <label for="email">Email</label>
-                            <input type="email" name="email" id="email" required="" placeholder="Email usuario">
-                        </div>
-                        <div class="inputBox">
-                            <label for="tel">Whatsapp</label>
-                            <input type="tel" name="tel" id="tel" required="" placeholder="Whatsapp para contato">
-                        </div>
-                        <div class="inputBox">
-                            <label for="logo">Logo</label>
-                            <input type="file" name="logo" id="logo" required="" placeholder="Whatsapp para contato">
-                            
-                        </div>
-                        <div class="inputBox">
-                            <label for="Pass">Password</label>
-                            <input type="password" name="Pass" id="Pass" required="">
-                        </div>
+	<main class="content_box_login">
+		<form action="/register" method="post">
+			<div class="form_area">
+				<div class="inputBox">
+					<label for="propietario">Propietario</label>
+					<input type="text" name="nameOwner" required>
+				</div>
 
+				<div class="inputBox">
+					<label for="loja">Nome da loja</label>
+					<input type="text" name="name" required>
+				</div>
 
+				<div class="inputBox">
+					<label for="loja">Descrição</label>
+					<input type="text" name="description" required>
+				</div>
 
-                        <div class="inputBox">
-                            <label for="endereco">Endereço</label>
-                            <input type="endereco" name="endereco" id="endereco" required="" placeholder="Endereço">
-                        </div>
+				<div class="inputBox">
+					<label for="email">Email</label>
+					<input type="email" name="email" required>
+				</div>
+			</div>
 
-                        <div class="inputBox">
-                            <label for="bairro">Bairro</label>
-                            <input type="text" name="bairro" id="bairro" required="" placeholder="Bairro">
-                        </div>
-
-                        <div class="inputBox">
-                            <label for="cep"> Cep</label>
-                            <input type="text" name="cep id="cep required="" placeholder="Cep">
-                        </div>
-
-                        <div class="inputBox">
-                            <label for="numero">Numero</label>
-                            <input type="number" name="numero" id="numero" required="" placeholder="Numero">
-                        </div>
-                    </div>
-                </form>
-                <div class="submit">
-                    <span><a href="#">Forgot passcode?</a></span>
-                    <button onclick="login()">Register</button>
-               </div>
-            </div>
-        </div>
-        <div class="zigzag-bottom"></div>
-    </main>
+			<button>Register</button>
+		</form>
+	</main>
 </body>
+
 </html>
