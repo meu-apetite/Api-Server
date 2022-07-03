@@ -21,18 +21,14 @@ body{
     background-color: #ffffff;
     height: 80%;
 }
-
 .content_box_second{
     position: relative;
     width: 100%;
     height: 100%;
 }
-.content_box_third{
-    
+.content_box_third{ 
     width: 100%;
     height: 100%;
-  
-    
 }
 .login{
     display: flex;

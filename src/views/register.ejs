@@ -1,79 +1,103 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Register</title>
-    <link rel="stylesheet" href="../public/style/register.css">
-    <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../public/style/register.css" />
+    <link href="https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
-    <main class="content_box_login">
-        <div class="content_box_second">
-            <div class="content_box_third">
-                <div class="login">
-                    <button>Login</button>
-                    <button>Sing-up</button>
-                </div>
-                <form action="">
-                    <div class="form_area">
-                        <div class="inputBox">
-                            <label for="propietario">Propietario</label>
-                            <input type="text" name="propietario" id="propietario" required="" placeholder="Nome do Propietario">
-                        </div>
-                        <div class="inputBox">
-                            <label for="loja">Nome da loja</label>
-                            <input type="text" name="loja" id="loja" required="" placeholder="Nome da Loja">
-                        </div>
-                        <div class="inputBox">
-                            <label for="email">Email</label>
-                            <input type="email" name="email" id="email" required="" placeholder="Email usuario">
-                        </div>
-                        <div class="inputBox">
-                            <label for="tel">Whatsapp</label>
-                            <input type="tel" name="tel" id="tel" required="" placeholder="Whatsapp para contato">
-                        </div>
-                        <div class="inputBox">
-                            <label for="logo">Logo</label>
-                            <input type="file" name="logo" id="logo" required="" placeholder="Whatsapp para contato">
-                            
-                        </div>
-                        <div class="inputBox">
-                            <label for="Pass">Password</label>
-                            <input type="password" name="Pass" id="Pass" required="">
-                        </div>
+    <main class="content">
+        <div class="tab">
+            <div class="tab__content-logo">
+                <img src="../public/img/logo.png" alt="">
+            </div>
 
-
-
-                        <div class="inputBox">
-                            <label for="endereco">Endereço</label>
-                            <input type="endereco" name="endereco" id="endereco" required="" placeholder="Endereço">
-                        </div>
-
-                        <div class="inputBox">
-                            <label for="bairro">Bairro</label>
-                            <input type="text" name="bairro" id="bairro" required="" placeholder="Bairro">
-                        </div>
-
-                        <div class="inputBox">
-                            <label for="cep"> Cep</label>
-                            <input type="text" name="cep id="cep required="" placeholder="Cep">
-                        </div>
-
-                        <div class="inputBox">
-                            <label for="numero">Numero</label>
-                            <input type="number" name="numero" id="numero" required="" placeholder="Numero">
-                        </div>
-                    </div>
-                </form>
-                <div class="submit">
-                    <span><a href="#">Forgot passcode?</a></span>
-                    <button onclick="login()">Register</button>
-               </div>
+            <div class="tab__content-button">
+                <span class="tab_link" id="button_login">Login</span>
+                <span class="tab_link active" id="button_singup">Sing-up</span>
             </div>
         </div>
-        <div class="zigzag-bottom"></div>
+
+        <form class="form" action="" method="post">
+            <div class="inputBox">
+                <label class="label" for="email">Email</label>
+                <input class="input-row" type="text" name="email" id="email" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="password">Senha</label>
+                <input class="input-row" type="text" name="password" id="password" required="" />
+            </div>
+        </form>
+
+        
+        <form class="form" action="" method="post">
+            <div class="inputBox">
+                <label class="label" for="propietario">Propietario</label>
+                <input class="input-row" type="text" name="propietario" id="propietario" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="loja">Nome da loja</label>
+                <input class="input-row" type="text" name="loja" id="loja" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="email">Email</label>
+                <input class="input-row" type="email" name="email" id="email" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="Pass">Password</label>
+                <input class="input-row" type="password" name="Pass" id="Pass" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="tel">Whatsapp</label>
+                <input class="input-row" type="tel" name="tel" id="tel" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="logo">Logo</label>
+                <input class="input-row" type="text" name="logo" id="logo" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="endereco">Endereço</label>
+                <input class="input-row" type="endereco" name="endereco" id="endereco" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="bairro">Bairro</label>
+                <input class="input-row" type="text" name="bairro" id="bairro" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="cep"> Cep</label>
+                <input class="input-row" type="text" name="cep" id="cep" required="" />
+            </div>
+
+            <div class="inputBox">
+                <label class="label" for="numero">Numero</label>
+                <input class="input-row" type="number" name="numero" id="numero" required="" />
+            </div>
+            <div class="content_button">
+                <button class="button">Register</button>
+            </div>
+        </form>
+
     </main>
+    <script src="../public/script/script.js"></script>
 </body>
+
 </html>
