@@ -1,7 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url("colors.css");
+@import url('colors.css');
 
-*{
+* {
   font-family: 'Montserrat', sans-serif;
 }
 
@@ -10,6 +9,7 @@ body {
   background: var(--bg-color);
 }
 
+/* Wrapper and container */
 .content {
   margin: auto;
   max-width: 1000px;
@@ -22,6 +22,12 @@ body {
   gap: 3rem;
 }
 
+.content_button {
+  padding: 3%;
+  text-align: center;
+}
+
+/* Default form and input */
 .form {
   width: 100%;
 }
@@ -35,6 +41,7 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 35px;
 }
+
 @media (max-width: 600px) {
   .form-group--row {
     grid-template-columns: 1fr;
@@ -59,11 +66,7 @@ body {
   border-bottom: 1px solid var(--text-color);
 }
 
-.content_button {
-  padding: 3%;
-  text-align: center;
-}
-
+/* Button and other elements */
 .link {
   color: var(--link-color);
 }
@@ -76,11 +79,12 @@ body {
   padding: 0.8rem 0;
   border-radius: 30px;
   border: none;
-} 
-@media(min-width: 600px) {
+}
+
+@media (min-width: 600px) {
   .button {
     width: initial;
     max-width: initial;
     padding: 0.8rem 4rem;
-  } 
+  }
 }
