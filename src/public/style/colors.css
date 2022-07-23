@@ -1,0 +1,8 @@
+:root {
+  --bg-color: #f2f2f2;
+  --primary-color: #04148c;
+  --text-color: rgba(0, 0, 0, 0.7);
+  --success-color: #52c41a;
+  --error-color: #ff4d4f;
+  --link-color: #1890ff;
+}

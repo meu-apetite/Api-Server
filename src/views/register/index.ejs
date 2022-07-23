@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<%- include('../components/head', {title: "Cadastre-se" }); %>
+
+<body>
+  <% if(typeof messages !=="undefined") { %>  
+    <%-include('../components/flashMessage', { messages }); %>  
+  <% } %>
+
+  <main class="content">
+    <%- include('../components/tab'); %>
+
+    <form action="" method="post" class="form">
+      <div class="form-group form-group--row">
+        <label class="label">
+          Nome do proprietário
+          <input type="text" name="nameOwner" class="input-row" />
+        </label>
+
+        <label class="label">
+          Nome da loja
+          <input type="text" name="name" class="input-row" />
+        </label>
+
+        <label class="label">
+          Nome da loja
+          <input type="text" name="" class="input-row" />
+        </label>
+
+        <label class="label">
+          Email
+          <input type="email" name="email" class="input-row" />
+        </label>
+
+        <label class="label">
+          Senha
+          <input type="password" name="password" class="input-row" />
+        </label>
+
+        <label class="label">
+          Repetir senha
+          <input type="password" name="" class="input-row" />
+        </label>
+      </div>
+
+      <br><br>
+
+      <div class="content_button">
+        <button class="button">Cadastrar</button>
+      </div>
+    </form>
+  </main>
+  <script src="../public/script/script.js"></script>
+</body>
+
+</html>
