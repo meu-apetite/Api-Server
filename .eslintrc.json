@@ -2,7 +2,7 @@
   "extends": [
     "plugin:prettier/recommended"
   ],
-  
+  "requireConfigFile": false,
   "parser": "babel-eslint",
 
   "plugins": ["prettier"],
