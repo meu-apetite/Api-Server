@@ -18,7 +18,7 @@ class Server {
     this.config();
     this.route();
 
-    this.app.listen(this.PORT, () => console.log('server on'));
+    this.app.listen(this.PORT, () => console.log('server on: localhost:5000'));
   }
 
   config() {
