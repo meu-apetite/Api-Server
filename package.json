@@ -1,15 +1,20 @@
 {
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "connect-ensure-login": "^0.1.1",
+    "connect-mongo": "^4.6.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.1",
     "ejs": "^3.1.8",
     "express": "^4.18.1",
     "express-flash-message": "^2.1.0",
     "express-session": "^1.17.3",
-    "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.4.2",
-    "mysql": "^2.18.1",
+    "morgan": "^1.10.0",
     "passport": "^0.6.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^7.1.2",
+    "subdomain": "^1.2.0"
   },
   "name": "expresso",
   "version": "1.0.0",
