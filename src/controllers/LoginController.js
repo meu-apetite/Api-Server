@@ -1,21 +1,18 @@
-import Store from '../models/StoreModel.js';
-import bcrypt from 'bcryptjs';
+import Company from '../models/CompanyModel.js';
 
 export default class LoginController {
   async index(req, res) {
-    const message = req.query.message;
-    let messages;
+    const subdomain = req.path.split('/')[1];
 
-    if (message) messages = [{ type: 'success', text: message }];
+    const company = await Company.findOne({ subdomain });
 
-    res.render('login', { messages });
-  }
-
-  async login(req, res) {
-    try {
-      return res.redirect('dashboard');
-    } catch (error) {
-      console.log(error);
+    if (!company) return res.render('errorNotStore');
+    if (req.user) return res.redirect('/admin');
+    if (req.query.messages) {
+      const messages = JSON.parse(req.query.messages);
+      res.render('login', { messages });
     }
+
+    return res.render('login');
   }
 }
