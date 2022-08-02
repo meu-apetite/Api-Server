@@ -11,11 +11,18 @@ passport.use(
     {
       usernameField: 'email',
       passwordField: 'password',
-      passReqToCallback: false,
+      passReqToCallback: true,
     },
-    async function verify(username, password, cb) {
+    async function verify(req, username, password, cb) {
       try {
-        const company = await Company.findOne({ username });
+        const subdomain = req.path.split('/')[1] || null;
+
+        const company = await Company.findOne({
+          email: username,
+          subdomain: subdomain,
+        });
+
+        console.log(company);
 
         if (!company) {
           return cb(null, false, {
@@ -51,14 +58,25 @@ passport.deserializeUser(function (user, cb) {
   });
 });
 
+router.post('/:subdomain/login/', function (req, res, next) {
+  passport.authenticate('local', function (err, user, info) {
+    if (!user) {
+      console.log(req)
+      return res.render('login', {
+        email: req.body.email,
+        messages: [
+          { type: 'error', text: 'A senha ou email inserido está incorreto!' },
+        ],
+      });
+    }
 
-router.post(
-  '/:subdomain/login/',
-  passport.authenticate('local', {
-    successReturnToOrRedirect: '/admin',
-    failureRedirect: '/login',
-    failureMessage: true,
-  })
-);
+    if (err) return res.render('error');
+
+    req.login(user, function (error) {
+      if (error) return next(error);
+      res.redirect(`/${user.subdomain}/admin`);
+    });
+  })(req, res, next);
+});
 
 export default router;

@@ -1,13 +1,6 @@
 export default (req, res, next) => {
-  if (!req.user) {
-    const message = JSON.stringify([
-      {
-        type: 'error',
-        text: 'Faça o login para continuar',
-      },
-    ]);
+  const subdomain = req.path.split('/')[1];
+  if (!req.user) return res.redirect(`/${subdomain}/login`);
 
-    return res.redirect(`/test/login?messages=${message}`);
-  }
   next();
 };

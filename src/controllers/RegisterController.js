@@ -12,8 +12,14 @@ export default class RegisterController {
     //Minimum eight characters, at least one letter and one number:
     const validationPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-    if (!validationPassword.teste(password)) {
+    if (!validationPassword.test(password)) {
       return res.render('register', {
+        inputData: {
+          nameOwner,
+          nameCompany,
+          subdomain,
+          email, 
+        },
         messages: [
           {
             type: 'error',

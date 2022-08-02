@@ -6,7 +6,6 @@ export default class StoreController {
 
     const company = await Company.findOne({ subdomain });
 
-    console.log('oi')
     if (!company) return res.render('notexiste');
 
     return res.render('store');

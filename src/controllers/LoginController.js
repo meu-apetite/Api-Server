@@ -7,7 +7,9 @@ export default class LoginController {
     const company = await Company.findOne({ subdomain });
 
     if (!company) return res.render('errorNotStore');
-    if (req.user) return res.redirect('/admin');
+
+    if (req.user) return res.redirect(`/${subdomain}/admin`);
+    
     if (req.query.messages) {
       const messages = JSON.parse(req.query.messages);
       res.render('login', { messages });
