@@ -1,41 +1,38 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
-const stringRequired = { type: String, required: true };
-const stringRequiredUniqueIndex = {
-  type: String,
-  required: true,
-  unique: true,
-};
-const numberTrimLowercase = { type: String, lowercase: true, trim: true };
-
 const companySchema = new Schema({
-  nameOwner: stringRequired,
-  nameCompany: stringRequired,
-  subdomain: stringRequiredUniqueIndex,
+  name: { type: String, required: true },
   descriptionCompany: String,
-  email: stringRequiredUniqueIndex,
-  password: stringRequired,
-  active: Boolean,
-
+  whatsappIntegration: String,
+  active: { type: Boolean, default: true },
+  owner: {
+    name: { type: String, required: true },
+    lastName: String,
+    sexo: String,
+  },
+  login: {
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+  },
   address: {
-    city: numberTrimLowercase,
-    street: numberTrimLowercase,
-    district: numberTrimLowercase,
-    number: Number,
+    city: { type: String, trim: true },
+    street: { type: String, trim: true },
+    district: { type: String, trim: true },
     zipCode: { type: Number, maxLength: 8 },
   },
-
   custom: {
     colorPrimary: String,
     colorSecudary: String,
-    logoImg: String,
-  },
-
-  products: {
-    product_id: String,
+    logo: {
+      type: String,
+      default: 'https://www.eps.org/global_graphics/default-store-350x350.jpg',
+    },
+    theme: {
+      type: String,
+      default: 'default',
+    },
   },
 });
 
-const Company = mongoose.model('company', companySchema);
-export default Company;
+export default mongoose.model('company', companySchema);

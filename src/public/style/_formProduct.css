@@ -1,0 +1,48 @@
+.image-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 5px;
+}
+
+.wrapper-preview {
+  position: relative;
+  padding: 1%;
+  width: 150px;
+  height: 135px;
+  background: url('/image/photo-gallery-icon.svg') var(--input-bgcolor);
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 5px;
+  border: var(--text-color);
+  cursor: cell;
+}
+
+.wrapper-preview--image {
+  padding: 0;
+  background: unset;
+  border: 1px solid var(--input-bgcolor);
+  cursor: no-drop;
+}
+
+.button-close-img {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 1rem;
+  background: #fff;
+  color: var(--custom-color);
+  right: -10px;
+  top: -8px;
+  cursor: pointer;
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+}

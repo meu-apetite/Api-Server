@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <script defer src="/js/_formVariations.js"></script>
+  <link rel="stylesheet" href="/style/default.css">
+</head>
+
+<body>
+  <!-- <% if(typeof messages !=="undefined") { %>  
+    <%-include('./components/flashMessage', { messages }); %>  
+  <% } %> -->
+
+  <main class="content">
+    <form id="form-variations" method="post" class="form">
+      <div class="form-group">
+        <label class="label"> Email
+          <input type="text" name="email" class="input" placeholder="Seu email"
+            <% if (locals.email) { %> value="<%= email %>" <% } %>
+          />
+        </label>
+
+        <label class="label"> Senha
+          <input type="password" name="password" class="input" placeholder="Sua senha"
+            <% if (locals.password) { %> value="<%= email %>" <% } %>
+          />
+        </label>
+      </div>
+
+      <div class="content_button">
+        <button id="button-submit" class="button">Salvar</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<script defer src="/js/_formVariations.js"></script>
+<link rel="stylesheet" href="/style/_formVariations.css">
+
+<form id="form-variations" method="post" class="form">
+  <div class="form-group">
+    <label class="label"> Título
+      <input type="text" name="title" class="input" placeholder="Título da categoria" <% if (locals.category) { %>
+      value="<%= category.title %>" <% } %> />
+    </label>
+  </div>
+
+  <div class="content_button">
+    <button id="button-submit" class="button">Salvar</button>
+  </div>
+</form>

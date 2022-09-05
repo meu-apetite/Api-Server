@@ -1,20 +1,45 @@
-import Company from '../models/CompanyModel.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import Model from '../models/CompanyModel.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
-export default class LoginController {
-  async index(req, res) {
-    const subdomain = req.path.split('/')[1];
+class LoginController {
+  pageLogin(req, res) {
+    return res.render('login', { layout: false });
+  }
 
-    const company = await Company.findOne({ subdomain });
+  async login(req, res) {
+    const { email, password } = req.body;
 
-    if (!company) return res.render('errorNotStore');
+    try {
+      const company = await Model.findOne({
+        'login.email': email,
+      }).select('name login');
 
-    if (req.user) return res.redirect(`/${subdomain}/admin`);
-    
-    if (req.query.messages) {
-      const messages = JSON.parse(req.query.messages);
-      res.render('login', { messages });
+      if (!company) throw new Error('Incorrect username or password!');
+
+      if (!bcrypt.compareSync(password, company.login.password)) {
+        throw 'Password incorrect!';
+      }
+
+      const token = jwt.sign(
+        { id: company._id, email: company.login.email },
+        process.env.TOKEN_KEY,
+        { expiresIn: '2h' }
+      );
+
+      res.cookie('token', token, {
+        expires: new Date(Date.now() + 1000 * 60 * 120),
+        httpOnly: false,
+      });
+
+      return res.render('admin');
+    } catch (error) {
+      console.log(error);
+      return res.render('login');
     }
-
-    return res.render('login');
   }
 }
+
+export default LoginController;

@@ -1,0 +1,32 @@
+<link rel="stylesheet" href="/style/table.css">
+
+<main>
+  <header class="content-header">
+    <h2 class="sub-title">Categoria de produto</h2>
+    <a href="/admin/category/create" class="decoration-none">
+      <button class="button">Nova categoria</button>
+    </a>
+  </header>
+
+  <section class="wrapper-table">
+    <table class="table">
+      <thead>
+        <tr>
+          <td>Título</td>
+          <td class="actions">Ações</td>
+        </tr>
+      </thead>
+      <tbody>
+        <% category.map((item)=> { %>
+          <tr>
+            <td><%- item.title %></td>
+
+            <td class="wrapper-actions">
+              <a href="/admin/category/update/<%- item._id %>" class="fa fa-pen"></a>
+              <a href="/admin/category/delete/<%- item._id %>" class="fa fa-trash"></a>
+            </td>
+          </tr>
+        <% } ) %>
+      </tbody>
+    </section>
+</main>
