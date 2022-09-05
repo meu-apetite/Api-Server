@@ -45,7 +45,7 @@ class Server {
     this.app.use(
       session({
         secret: '123',
-        cookie: { _expires: 60000 },
+        cookie: { _expires: 60000 * 40, maxAge: 60000 * 40 },
         resave: false,
         saveUninitialized: false,
       })

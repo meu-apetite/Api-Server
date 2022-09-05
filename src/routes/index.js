@@ -21,10 +21,6 @@ router.post('/register', registerController.register);
 router.get('/:subdomain/login', loginController.index);
 
 //admin
-router.get('/admin', authorized, async (req, res) => {
-  const { subdomain } = req.user;
-  res.redirect(`/${subdomain}/admin`);
-});
 router.get('/:subdomain/admin', authorized, (req, res) => res.render('admin'));
 router.get('/:subdomain/admin/test', authorized, (req, res) => res.render('admin/test'));
 
