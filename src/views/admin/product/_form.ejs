@@ -18,8 +18,8 @@
 
     <label class="label"> Preço
       <input type="text" name="price-disp" class="input" oninput="maskMoney(event, 'price')" placeholder="R$ 0,00"
-      <% if (locals.product) %> value="R$ <%= product.price %>" required />
-      <input type="hidden" name="price" class="input" <% if (locals.product) %> value="<%= product.price %>" />
+      <% if (locals.product) { %> value="R$ <%= product.price %>" <% } %> required />
+      <input type="hidden" name="price" class="input" <% if (locals.product) { %> value="<%= product.price %>" <% } %>/>
     </label>
   </div>
 
@@ -33,7 +33,7 @@
         <span class="fa fa-circle-plus"></span>
       </span>
 
-      <% if (locals.product.categories) { product.categories.map(category=> { %>
+      <% if (locals.product && locals.product.categories) { product.categories.map(category=> { %>
       <div style="display: grid; grid-template-columns: 1fr 30px; gap: 1rem; align-items: center;">
         <select name="categories" class="select">
           <option selected><%- category.title %></option>

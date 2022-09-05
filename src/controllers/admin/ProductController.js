@@ -41,7 +41,7 @@ class ProductController {
     // ];
 
     const variation = await Variation.find();
-    const category = await Category.find();
+    const category = await Categories.find();
     res.render('admin/product/create', { variation, category });
   }
 
@@ -53,21 +53,28 @@ class ProductController {
       const images = [];
 
       // Combine variations (variations, name and price)
-      data.variations = [...new Set(data.variations)];
+      console.log(data)
+    if(Array.isArray(data.variations)){
+        data.variations = [...new Set(data.variations)];
 
-      if (data.variationsItem) {
-        data.variationsItem.map((item, i) => {
-          variationsItem.push({
-            _id: item,
-            price: Number(data.variationsPrice[i]),
+        if (data.variationsItem.length) {
+          data.variationsItem.map((item, i) => {
+            variationsItem.push({
+              _id: item,
+              price: Number(data.variationsPrice[i]),
+
+            });
           });
-        });
+        }
+        data.variationsItem = variationsItem;
+      }else{
+        data.variationsItem = [{_id: data.variationsItem, price: data.variationsPrice}];
+        data.variations = [data.variations];
       }
 
-      data.variationsItem = variationsItem;
 
       // Combine images
-      if (typeof data.image === 'string') {
+      if (!Array.isArray(data.image)) {
         images.push({ id: data.imageId, url: data.image });
       } else {
         data.image.forEach((item, index) => {
