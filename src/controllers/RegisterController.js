@@ -12,17 +12,17 @@ export default class RegisterController {
     //Minimum eight characters, at least one letter and one number:
     const validationPassword = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
-    if (!validationPassword.teste(password)) {
-      return res.render('register', {
-        messages: [
-          {
-            type: 'error',
-            text:
-              'A senha precisa ter o mínimo de oito caracteres, pelo menos uma letra e um número.',
-          },
-        ],
-      });
-    }
+    // if (!validationPassword.teste(password)) {
+    //   return res.render('register', {
+    //     messages: [
+    //       {
+    //         type: 'error',
+    //         text:
+    //           'A senha precisa ter o mínimo de oito caracteres, pelo menos uma letra e um número.',
+    //       },
+    //     ],
+    //   });
+    // }
 
     try {
       const passwordHash = bcrypt.hashSync(password, 12);
