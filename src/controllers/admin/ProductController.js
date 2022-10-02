@@ -1,60 +1,29 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductModel.js';
-import Variation from '../../models/VariationModel.js';
 import Categories from '../../models/CategoryModel.js';
 
 class ProductController {
   async pageIndex(req, res) {
-    const page = parseInt(req.params.page) || 0; //for next page pass 1 here
-    const limit = parseInt(req.params.limit) || 10;
-
-    const product = await Model.find()
-      .limit(limit)
-      .sort({ update_at: -1 })
-      .skip(page * limit);
-
-    const docCount = await Model.countDocuments();
-    const pageSize = Math.ceil(docCount / limit);
-
-    res.render('admin/product/', {
-      product,
-      pageInfo: {
-        pageSize,
-        pageCurrent: page,
-      },
-    });
+    const product = await Model.find().populate('categories')
+    res.status(200).json(product);
   }
 
   async pageCreate(req, res) {
-    // const measurementUnits = [
-    //   { code: 'cx', name: 'caixa' },
-    //   { code: 'pte', name: 'pacote' },
-    //   { code: 'pc', name: 'peça' },
-    //   { code: 'kg', name: 'Quilo' },
-    //   { code: 'un', name: 'Unidade' },
-    //   { code: 'por', name: 'porção' },
-    //   { code: 'cart', name: 'cartela' },
-    //   { code: 'lt', name: 'litro' },
-    //   { code: '', name: 'jogo' },
-    //   { code: 'par', name: 'par' },
-    //   { code: 'mt', name: 'metro' },
-    // ];
-
-    const variation = await Variation.find();
-    const category = await Categories.find();
-    res.render('admin/product/create', { variation, category });
+    const categories = await Categories.find();
+    res.render('admin/product/create', { variation, categories });
   }
 
   async create(req, res) {
     const data = { ...req.body };
+    const categories = await Categories.find();
 
     try {
       const variationsItem = [];
       const images = [];
 
       // Combine variations (variations, name and price)
-      console.log(data)
-    if(Array.isArray(data.variations)){
+      console.log(data);
+      if (Array.isArray(data.variations)) {
         data.variations = [...new Set(data.variations)];
 
         if (data.variationsItem.length) {
@@ -62,16 +31,16 @@ class ProductController {
             variationsItem.push({
               _id: item,
               price: Number(data.variationsPrice[i]),
-
             });
           });
         }
         data.variationsItem = variationsItem;
-      }else{
-        data.variationsItem = [{_id: data.variationsItem, price: data.variationsPrice}];
+      } else {
+        data.variationsItem = [
+          { _id: data.variationsItem, price: data.variationsPrice },
+        ];
         data.variations = [data.variations];
       }
-
 
       // Combine images
       if (!Array.isArray(data.image)) {
@@ -94,24 +63,30 @@ class ProductController {
       return res.redirect('/admin/product/');
     } catch (error) {
       console.log(error);
-      return res.render('admin/product/create', { product: [data] });
+      return res.render('admin/product/create', { product: [data], variation });
     }
   }
 
   async pageUpdate(req, res) {
     try {
-      const id = req.params.productId;
-      const company = req.company.id;
+      const companyId = req.company.id;
+      const { productId } = req.params;
 
-      const product = await Model.findOne({ $and: [{ _id: id }, { company }] })
-      .populate('variations')
-      .populate('categories', 'title');
-      const categories = await Categories.find({ company });
+      const product = await Model.findOne({
+        $and: [{ _id: productId }, { company: companyId }],
+      })
+        .populate('variations')
+        .populate('categories', 'title');
+      const categories = await Categories.findOne({ company: companyId });
+      const variation = await Variation.findOne({ company: companyId });
 
-      console.log(categories);
-
-      return res.render('admin/product/update', { product, categories });
+      return res.render('admin/product/update', {
+        product,
+        categories,
+        variation,
+      });
     } catch (error) {
+      console.log(error);
       res.send('Produto não encontrado!');
     }
   }
@@ -121,7 +96,7 @@ class ProductController {
       await Model.findByIdAndUpdate(req.params.productId, req.body);
       return res.redirect(`/admin/product/update/${req.params.productId}`);
     } catch (error) {
-     return console.log(error)
+      return console.log(error);
       return res.render(`admin/product/update/${req.params.productId}`, {
         product: [data],
       });

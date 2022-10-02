@@ -20,6 +20,9 @@ const productSchema = new Schema({
     type: Number,
     required: true,
   },
+  priceDiscount: {
+    type: Number,
+  },
   categories: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,18 +31,8 @@ const productSchema = new Schema({
   ],
   variations: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'variations',
-    },
-  ],
-
-  variationsItem: [
-    {
-      name: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'variations.variations',
-      },
-      price: Number,
+      title: String,
+      variants: { name: String, price: Number },
     },
   ],
   measurementUnits: [String],

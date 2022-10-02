@@ -5,11 +5,9 @@ const router = Router();
 
 const categoryController = new CategoryController();
 
-router.get('/admin/category', categoryController.pageIndex);
-router.get('/admin/category/create', categoryController.pageCreate);
-router.post('/admin/category/create', categoryController.create);
-router.get('/admin/category/update/:categoryId', categoryController.pageUpdate);
-router.post('/admin/category/update/:categoryId', categoryController.update);
-router.get('/admin/category/delete/:categoryId', categoryController.delete);
+router.post('/admin/category', categoryController.create);
+router.get('/admin/category', categoryController.find);
+router.put('/admin/category/:categoryId', categoryController.update);
+router.delete('/admin/category/:categoryId', categoryController.delete);
 
 export default router;

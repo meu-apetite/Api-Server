@@ -2,9 +2,10 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const companySchema = new Schema({
-  name: { type: String, required: true },
-  descriptionCompany: String,
-  whatsappIntegration: String,
+  urlName: { type: String },
+  fantasyName: { type: String, required: true },
+  description: String,
+  whatsapp: String,
   active: { type: Boolean, default: true },
   owner: {
     name: { type: String, required: true },

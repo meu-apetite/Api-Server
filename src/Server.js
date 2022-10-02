@@ -23,8 +23,7 @@ class Server {
   config() {
     const dirname = path.dirname(fileURLToPath(import.meta.url));
 
-    this.app.use(express.urlencoded({ extended: false }));
-    this.app.use(express.json());
+    this.app.use(express.json({ extended: false }));
     this.app.use(cookieParser());
     // Config view e path public
     this.app.set('views', path.join(dirname, 'views'));

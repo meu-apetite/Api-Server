@@ -1,4 +1,3 @@
-import login from './login.routes.js';
-import register from './register.routes.js';
+import company from './company.routes.js';
 
-export default [login, register];
+export default [company];
