@@ -2,40 +2,32 @@ import Model from '../../models/CategoryModel.js';
 const _idCompany = '63776367367dgdtfct';
 
 class CategoryController {
-  async pageIndex(req, res) {
-    const category = await Model.find();
-
-    res.render('admin/category', { category });
-  }
-
-  pageCreate(req, res) {
-    res.render('admin/category/create');
-  }
-
-  async create(req, res) {
-    const { title, category } = req.body;
-
+  async find(req, res) {
     try {
-      await Model.create({ _idCompany, title, category });
-      res.redirect('/admin/category');
+      const id = req.body.categoryId;
+      const categories = id ? await Model.find(id) : Model.find();
+
+      res.render('admin/category', { categories });
     } catch (error) {
-      console.log(error);
+      res.render('admin/category', { category });
     }
   }
 
-  async pageUpdate(req, res) {
+  async create(req, res) {
     try {
-      const category = await Model.findById(req.params.categoryId);
-      res.render('admin/category/update', { category });
+      const { _idCompany, title, image } = req.body;
+      const category = await Model.create({ _idCompany, title });
+
+      res.status(200).json(category);
     } catch (error) {
       console.log(error);
     }
   }
 
   async update(req, res) {
-    const { title, category } = req.body;
-
     try {
+      const { title, category } = req.body;
+
       await Model.findOneAndUpdate(req.params.categoryId, {
         _idCompany,
         title,
