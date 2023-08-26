@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import CompanyController from '../controllers/CompanyController.js';
+import AuthController from '../controllers/AuthController.js';
 
 const router = Router();
 
-const controller = new CompanyController();
+const controller = new AuthController();
 
 router.post('/register', controller.register);
 router.post('/login', controller.login);

@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 const companySchema = new Schema({
   urlName: { type: String },
   fantasyName: { type: String, required: true },
+  slogan: String,
   description: String,
   whatsapp: String,
   active: { type: Boolean, default: true },
@@ -17,23 +18,24 @@ const companySchema = new Schema({
     password: { type: String, required: true },
   },
   address: {
+    state: { type: String, trim: true },
     city: { type: String, trim: true },
+    number: { type: Number, trim: true },
     street: { type: String, trim: true },
     district: { type: String, trim: true },
-    zipCode: { type: Number, maxLength: 8 },
+    zipCode: { type: String, maxLength: 8 },
+    coordinates: { latitude: Number, longitude: Number},
+    freeformAddress: { type: String, trim: true }
+  },
+  delivery: {
+    active: Boolean,
+    priceKm: Number
   },
   custom: {
-    colorPrimary: String,
-    colorSecudary: String,
-    logo: {
-      type: String,
-      default: 'https://www.eps.org/global_graphics/default-store-350x350.jpg',
-    },
-    theme: {
-      type: String,
-      default: 'default',
-    },
+    logo: { url: String, id: String },
+    googleMapUrl: String,
+    gallery: [{ url: String, id: String }]
   },
 });
 
-export default mongoose.model('company', companySchema);
+export default mongoose.model('companies', companySchema);

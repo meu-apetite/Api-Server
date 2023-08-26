@@ -6,13 +6,12 @@ import dotenv from 'dotenv';
 const checkValidation = new Validation();
 dotenv.config();
 
-class RegisterController {
+class Auth {
   async register(req, res) {
     try {
       const data = { ...req.body };
       const messages = [];
 
-      //Validation
       Object.keys(data).forEach((item) => {
         if (!checkValidation[item]) return;
 
@@ -53,20 +52,14 @@ class RegisterController {
 
       //Validation
       if (!checkValidation.email(data.email)) {
-        return res.status(401).json({ type: 'error', text: 'Email inválido!' });
+        return res.status(401).json({ success: false, message: 'Email inválido!' });
       }
 
-      const company = await Model.findOne({ 'login.email': data.email }).select(
-        'name login'
-      );
+      const company = await Model.findOne({ 'login.email': data.email })
+        .select('name login');
 
-      if (
-        !company ||
-        !bcrypt.compareSync(data.password, company.login.password)
-      ) {
-        return res.status(401).json({
-          messages: [{ type: 'error', text: 'Senha ou email incorreto!' }],
-        });
+      if (!company || !bcrypt.compareSync(data.password, company.login.password)) {
+        return res.status(401).json({ success: false, message: 'Senha ou email incorreto!' });
       }
 
       const token = jwt.sign(
@@ -75,17 +68,13 @@ class RegisterController {
         { expiresIn: '2h' }
       );
 
-      return res.status(200).json({ type: 'success', text: 'Logado.', token });
+      return res.status(200).json({ success: true, message: 'Logado.', token, _id: company._id  });
     } catch (error) {
       return res
         .status(400)
-        .json({
-          messages: [
-            { type: 'error', text: 'Houve um erro de comunicação na rede.' },
-          ],
-        });
+        .json({ success: false, message: 'Houve um erro de comunicação na rede.'});
     }
   }
 }
 
-export default RegisterController;
+export default Auth;

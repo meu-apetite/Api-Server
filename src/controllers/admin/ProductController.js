@@ -1,94 +1,74 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductModel.js';
 import Categories from '../../models/CategoryModel.js';
+import { upload } from '../../settings/multer.js';
 
 class ProductController {
-  async pageIndex(req, res) {
-    const product = await Model.find().populate('categories')
-    res.status(200).json(product);
-  }
+  async getAll(req, res) {
+    try {
+      const products = await Model.find()
+        .populate('category', 'title')
+        .exec();
 
-  async pageCreate(req, res) {
-    const categories = await Categories.find();
-    res.render('admin/product/create', { variation, categories });
+      return res.status(200).json(products);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async create(req, res) {
-    const data = { ...req.body };
-    const categories = await Categories.find();
+    upload.array('images')(req, res, async (err) => {
+      try {
+        const company = req.headers._id;
+        let {
+          name,
+          description,
+          code,
+          price,
+          discountPrice,
+          isActive,
+          category,
+          unit,
+          complements 
+        } = req.body;
+        complements = complements || "[]";
+        const images = [];
 
-    try {
-      const variationsItem = [];
-      const images = [];
-
-      // Combine variations (variations, name and price)
-      console.log(data);
-      if (Array.isArray(data.variations)) {
-        data.variations = [...new Set(data.variations)];
-
-        if (data.variationsItem.length) {
-          data.variationsItem.map((item, i) => {
-            variationsItem.push({
-              _id: item,
-              price: Number(data.variationsPrice[i]),
-            });
+        if (!name.trim().length) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Nome não pode ficar em branco' 
           });
         }
-        data.variationsItem = variationsItem;
-      } else {
-        data.variationsItem = [
-          { _id: data.variationsItem, price: data.variationsPrice },
-        ];
-        data.variations = [data.variations];
-      }
 
-      // Combine images
-      if (!Array.isArray(data.image)) {
-        images.push({ id: data.imageId, url: data.image });
-      } else {
-        data.image.forEach((item, index) => {
-          images.push({ id: data.imageId[index], url: item });
+        if (req.files.length) {
+          const uploadPromises = req.files.map(file => {
+            return cloudinary.uploader.upload(file.path, { folder: company });
+          })
+          const uploads = await Promise.all(uploadPromises);
+          uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
+        }
+
+        const product = await Model.create({
+          isActive,
+          company,
+          name,
+          description,
+          code,
+          price,
+          discountPrice,
+          category,
+          images,
+          unit,
+          complements: JSON.parse(complements)
         });
+
+        res.status(200).json(product);
+      } catch (error) {
+        console.log(error);
+        return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
       }
-
-      delete data.imageId;
-      delete data.image;
-      data.images = images;
-
-      console.log(data);
-      // return
-
-      // Save
-      await Model.create({ ...data, company: req.company.id });
-      return res.redirect('/admin/product/');
-    } catch (error) {
-      console.log(error);
-      return res.render('admin/product/create', { product: [data], variation });
-    }
-  }
-
-  async pageUpdate(req, res) {
-    try {
-      const companyId = req.company.id;
-      const { productId } = req.params;
-
-      const product = await Model.findOne({
-        $and: [{ _id: productId }, { company: companyId }],
-      })
-        .populate('variations')
-        .populate('categories', 'title');
-      const categories = await Categories.findOne({ company: companyId });
-      const variation = await Variation.findOne({ company: companyId });
-
-      return res.render('admin/product/update', {
-        product,
-        categories,
-        variation,
-      });
-    } catch (error) {
-      console.log(error);
-      res.send('Produto não encontrado!');
-    }
+    });
   }
 
   async update(req, res) {
@@ -110,6 +90,33 @@ class ProductController {
       res.render('admin/product/update', { product });
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async deleteMultiple(req, res) {
+    let product;
+
+    try {
+      const { productIds } = req.body;
+
+      productIds.forEach(async (id) => {
+        product = await Model.findByIdAndDelete(id, { new: true });
+        if(product.images.length) {
+          product.images.map(async (id) => await cloudinary.uploader.destroy(id));
+        }
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const products = await Model.find();
+
+      return res.status(200).json(products);
+    } catch (error) {
+      console.log(error)
+      const _idCompany = req.headers._id;
+
+      await LogModel.create({ _idCompany, message: error, info: product });
+      return res.status(400).json({ success: false, message: 'Erro na exclusão do produto' });
     }
   }
 
