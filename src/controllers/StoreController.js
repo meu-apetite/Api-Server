@@ -1,7 +1,8 @@
 import ProductModel from '../models/ProductModel.js';
 import StoreModel from '../models/CompanyModel.js';
 import mercadopago from 'mercadopago';
-import axios from 'axios'
+import axios from 'axios';
+import OrdersModel from '../models/OrdersModel .js';
 
 const api = 'https://api.tomtom.com/search/2/geocode';
 const key = 'GmL5wOEl3iWP0n1l6O5sBV0XKo6gHwht';
@@ -28,7 +29,7 @@ class StoreController {
       const companyId = req.params?.companyId;
 
       const store = await StoreModel.findById(companyId)
-        .select('fantasyName custom');
+        .select('fantasyName custom address');
 
       return res.status(200).json(store);
     } catch (error) {
@@ -36,8 +37,8 @@ class StoreController {
     }
   }
 
-  async estimateValue(req, res) {
-    /** req: [
+  async estimateValueFromData(listProduct) {
+    /**[
      *   {
      *      complements: [{ 
      *        parentId: string, //id of group complement 
@@ -51,7 +52,6 @@ class StoreController {
      * */
 
     try {
-      const listProduct = [...req.body];
       const requestInfo = []; //info of request;
       let priceTotal = 0;
 
@@ -96,23 +96,48 @@ class StoreController {
         });
       };
 
-      console.log(requestInfo);
-      return res.status(200).json({ products: requestInfo, total: priceTotal });
+      return { products: requestInfo, total: priceTotal };
     } catch (error) {
       console.log(error);
     }
   }
 
-  async calculateFreight(req, res) {
-  /** req: { 
-    *    address: {
-    *      street: string, number: number, zipCode: string, district: string, city: string
-    *    },
-    *    storeId: string
-    *  **/
+  estimateValue = async (req, res) => {
+    try {
+      const listProduct = [...req.body];
+
+      const result = await this.estimateValueFromData(listProduct);
+
+      if (result) {
+        console.log(result);
+        return res.status(200).json(result);
+      } else {
+        return res.status(500).json({ error: "An error occurred" });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ error: "An error occurred" });
+    }
+  };
+
+  calculateFreight = async (req, res) => {
+    /** req: { 
+      *    address: {
+      *      street: string, number: number, zipCode: string, district: string, city: string
+      *    },
+      *    storeId: string,
+      *    items: [
+      *     {
+      *       complements: [{}],
+      *       productId: string,
+      *       quantity: number
+      *     }
+      *   ]
+      * 
+      *  **/
 
     try {
-      const { address, storeId } = req.body;
+      const { address, items, storeId } = req.body;
 
       const query = `${address.street},${address.number},${address.zipCode},${address.district},${address.city}`;
       const responseClientAddress = await axios.get(api + `/${encodeURIComponent(query)}.json?key=${key}`);
@@ -121,10 +146,30 @@ class StoreController {
       const company = await StoreModel.findById('644d03bb1169fea569ff4348').select('address');
       const queryCalculate = `${company.address.coordinates.latitude},${company.address.coordinates.longitude}:${result.position.lat},${result.position.lon}`;
       const responseCalculate = await axios.get(`https://api.tomtom.com/routing/1/calculateRoute/${queryCalculate}/json?key=${key}`);
-     
-      console.log(responseCalculate.data)
 
-      return res.status(200).json(responseCalculate.data);
+      const distanceInKm = responseCalculate.data.routes[0].summary.lengthInMeters / 1000;
+      const costPerKm = 5;
+      const totalCost = distanceInKm * costPerKm;
+
+      const estimateValue = await this.estimateValueFromData(items);
+      const mercadopago = await this.payment();
+      
+  
+      const order = await OrdersModel.create({
+        ...estimateValue,
+        payment: { mercadoPagoId: mercadopago },
+        status: 'in-cart',
+        delivery: {
+          type: 'delivery',
+          destination: { latitude: result.position.lat, longitude: result.position.lon },
+          distance: distanceInKm,
+          price: totalCost
+        }
+      });
+
+      console.log(order);
+
+      return res.status(200).json(order);
     } catch (error) {
       console.error(error);
     }
@@ -140,12 +185,12 @@ class StoreController {
           { title: 'My Item', unit_price: 100, quantity: 1 },
         ]
       };
-  
-      const response =  await mercadopago.preferences.create(preference);
 
-      return response.body.id
+      const response = await mercadopago.preferences.create(preference);
+
+      return response.body.id;
     } catch (error) {
-      console.log('erroo ', error)
+      console.log('erroo ', error);
     }
   }
 }
