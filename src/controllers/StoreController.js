@@ -3,9 +3,12 @@ import StoreModel from '../models/CompanyModel.js';
 import mercadopago from 'mercadopago';
 import axios from 'axios';
 import OrdersModel from '../models/OrdersModel .js';
+import Stripe from 'stripe';
+
 
 const api = 'https://api.tomtom.com/search/2/geocode';
 const key = 'GmL5wOEl3iWP0n1l6O5sBV0XKo6gHwht';
+const stripe = new Stripe('sk_test_Ho24N7La5CVDtbmpjc377lJI');
 
 class StoreController {
   async getAllProduct(req, res) {
@@ -175,7 +178,21 @@ class StoreController {
     }
   };
 
-  async payment() {
+  async generateStripeSession(req, res) {
+    const YOUR_DOMAIN = 'http://localhost:3000';
+    const session = await stripe.checkout.sessions.create({
+      line_items: [{ price: 'pr_1234', quantity: 1 }],
+      mode: 'payment',
+      success_url: `${YOUR_DOMAIN}?success=true`,
+      cancel_url: `${YOUR_DOMAIN}?canceled=true`,
+    });
+
+    console.log(session)
+   
+    res.json(session);
+  };
+
+  async generateIdMercadoPago(req, res) {
     try {
       mercadopago.configure({ access_token: 'TEST-1944498221096339-010600-f3917d8d9a0242baa5b2236a9d4ac87e-225270724' });
 
@@ -188,7 +205,7 @@ class StoreController {
 
       const response = await mercadopago.preferences.create(preference);
 
-      return response.body.id;
+      return res.json({ id: response.body.id });
     } catch (error) {
       console.log('erroo ', error);
     }

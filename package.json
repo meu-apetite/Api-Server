@@ -12,7 +12,8 @@
     "jsonwebtoken": "^8.5.1",
     "mercadopago": "^1.5.17",
     "mongoose": "^6.4.2",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "stripe": "^13.6.0"
   },
   "name": "expresso",
   "version": "1.0.0",

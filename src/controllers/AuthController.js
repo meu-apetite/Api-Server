@@ -14,35 +14,25 @@ class Auth {
 
       Object.keys(data).forEach((item) => {
         if (!checkValidation[item]) return;
-
         const validation = checkValidation[item](data[item]);
-        if (validation !== 'valid') {
-          messages.push({ type: 'error', text: validation });
-        }
+        if (validation !== true) messages.push(validation);
       });
 
-      if (messages.length) return res.status(400).json({ messages });
+      console.log(messages)
 
-      //Create
-      const company = await Model.create({
+      if (messages.length) res.status(400).json({ success: false, message: `${messages.join(", ")}` });
+
+      await Model.create({
         fantasyName: data.fantasyName,
         whatsapp: data.whatsapp,
         owner: { name: data.ownerName },
-        login: {
-          email: data.email,
-          password: bcrypt.hashSync(data.password, 12),
-        },
+        login: { email: data.email, password: bcrypt.hashSync(data.password, 12) },
       });
 
-      return res.status(200).json({
-        messages: [{ type: 'success', text: 'Cadastro feito com sucesso!' }],
-      });
+      return res.status(200).json({ success: true, message: 'Cadastro feito com sucesso!' });
     } catch (error) {
-      res.status(400).json({
-        messages: [
-          { type: 'error', text: 'Erro: confira os campos e tente novamente.' },
-        ],
-      });
+      console.log(error)
+      res.status(400).json({ success: false, message: 'Erro: confira os campos e tente novamente.' });
     }
   }
 

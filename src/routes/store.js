@@ -8,7 +8,8 @@ const controller = new StoreController();
 router.get('/store/products/:companyId', controller.getAllProduct);
 router.get('/store/:companyId', controller.getStore);
 router.post('/store/estimateValue', controller.estimateValue);
-router.post('/store/payment', controller.payment);
+router.get('/store/payment/generateStripeSession', controller.generateStripeSession);
+router.get('/store/payment/generateIdMercadoPago', controller.generateIdMercadoPago);
 router.post('/store/calculateFreight', controller.calculateFreight);
 
 export default router;
