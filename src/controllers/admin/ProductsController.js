@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
-import Model from '../../models/ProductModel.js';
-import Categories from '../../models/CategoryModel.js';
+import Model from '../../models/ProductsModel.js';
+import Categories from '../../models/CategoriesModel.js';
 import { upload } from '../../settings/multer.js';
 
 class ProductController {
@@ -28,7 +28,6 @@ class ProductController {
           discountPrice,
           isActive,
           category,
-          unit,
           complements 
         } = req.body;
         complements = complements || "[]";
@@ -39,6 +38,10 @@ class ProductController {
             success: false, 
             message: 'Nome não pode ficar em branco' 
           });
+        }
+
+        if (typeof(Number(price)) !== 'number') {
+          return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
 
         if (req.files.length) {
@@ -55,11 +58,10 @@ class ProductController {
           name,
           description,
           code,
-          price,
           discountPrice,
           category,
           images,
-          unit,
+          price: Number(price),
           complements: JSON.parse(complements)
         });
 

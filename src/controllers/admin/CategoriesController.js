@@ -1,6 +1,6 @@
-import Model from '../../models/CategoryModel.js';
+import Model from '../../models/CategoriesModel.js';
 import LogModel from '../../models/LogModel.js';
-import { upload } from '../../settings/multer.js';
+import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 
 /**
@@ -9,13 +9,41 @@ import { v2 as cloudinary } from 'cloudinary';
   *  title: 'title of category' (required)
 */
 
-class CategoryController {
+class CategoriesController {
   async getAll(req, res) {
     try {
-      const categories = await Model.find();
+      const company = req.headers._id;
+      const categories = await Model.find({ company });
+
+      console.log(categories)
 
       return res.status(200).json(categories);
     } catch (error) {
+      return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
+    }
+  }
+
+  async listCategoriesWithProducts(req, res) {
+    try {
+      const company = req.headers._id;
+
+      const categories = await Model.aggregate([
+        {
+          $match: { company: mongoose.Types.ObjectId(company) }
+        },
+        {
+          $lookup: {
+            from: 'products', 
+            localField: '_id',
+            foreignField: 'category',
+            as: 'products'
+          }
+        }
+      ])
+
+      return res.status(200).json(categories);
+    } catch (error) {
+      console.log(error)
       return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
     }
   }
@@ -36,31 +64,22 @@ class CategoryController {
 
   async create(req, res) {
     try {
-      upload.single('image')(req, res, async (err) => {
-        const _idCompany = req.headers._id;
-        const { title } = req.body;
-        let image;
+      const company = req.headers._id;
+      const { title } = req.body;
 
-        console.log(err)
-
-        if (err) return res.status(400).json({
-          success: false, message: 'Erro no upload do arquivo'
+      if (!title.trim().length) {
+        res.status(200).json({ 
+          success: false, 
+          message: 'O título não pode ficar em branco' 
         });
+        return;
+      }
 
-        if (!title.trim().length) {
-          return res.status(200).json({ success: false, message: 'O título não pode ficar em branco' });
-        }
+      const category = await Model.create({ company, title: title.trim(), isActive: true });
 
-        if (req.file) {
-          const upload = await cloudinary.uploader.upload(req.file.path, { folder: _idCompany });
-          image = upload?.url;
-        }
-
-        const category = await Model.create({ _idCompany, title: title.trim(), image });
-
-        res.status(200).json(category);
-      });
+      res.status(200).json(category);
     } catch (error) {
+      console.log(error)
       return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
     }
   }
@@ -78,30 +97,14 @@ class CategoryController {
     }
   }
 
-  async removeImage(req, res) {
-    try {
-      const { categoryId } = req.params;
-      const { imageUrl } = req.body;
-      const imageUrlSplit = imageUrl.split('/');
-      const id = imageUrlSplit[imageUrlSplit.length - 1].split('.')[0];
-
-      await cloudinary.uploader.destroy(id);
-      const category = await Model.findByIdAndUpdate(categoryId, { $set: { image: null } }, { new: true });
-
-      return res.status(200).json(category);
-    } catch (error) {
-      return res.status(400).json({ success: false, message: 'Não foi possivel excluir a imagem' });
-    }
-  }
-
   async delete(req, res) {
-    let category;
 
     try {
+      let category;
       const { categoryId } = req.params;
       category = await Model.findByIdAndDelete(categoryId);
 
-      if(category.image) {
+      if (category.image) {
         const imageUrlSplit = category.image.split('/');
         const id = imageUrlSplit[imageUrlSplit.length - 1].split('.')[0];
         await cloudinary.uploader.destroy(id);
@@ -113,7 +116,7 @@ class CategoryController {
     } catch (error) {
       const _idCompany = req.headers._id;
 
-      await LogModel.create({ _idCompany,  message: error, info: category });
+      await LogModel.create({ _idCompany, message: error, info: category });
       return res.status(400).json({ success: false, message: 'Ocorreu um erro ao excluir a categoria' });
     }
   }
@@ -126,14 +129,8 @@ class CategoryController {
 
       listCategories.forEach(async (categoryId) => {
         category = await Model.findByIdAndDelete(categoryId, { new: true });
-        
-        if(category.image) {
-          const imageUrlSplit = category.image.split('/');
-          const id = imageUrlSplit[imageUrlSplit.length - 1].split('.')[0];
-          await cloudinary.uploader.destroy(id);
-        }
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       const categories = await Model.find();
@@ -142,10 +139,10 @@ class CategoryController {
     } catch (error) {
       const _idCompany = req.headers._id;
 
-      await LogModel.create({ _idCompany,  message: error, info: category });
+      await LogModel.create({ _idCompany, message: error, info: category });
       return res.status(400).json({ success: false, message: 'Ocorreu um erro ao excluir a categoria' });
     }
   }
 }
 
-export default CategoryController;
+export default CategoriesController;

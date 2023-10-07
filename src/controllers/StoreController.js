@@ -1,4 +1,4 @@
-import ProductModel from '../models/ProductModel.js';
+import ProductModel from '../models/ProductsModel.js';
 import StoreModel from '../models/CompanyModel.js';
 import mercadopago from 'mercadopago';
 import axios from 'axios';
