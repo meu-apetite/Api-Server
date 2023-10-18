@@ -27,11 +27,13 @@ router.post('/admin/categories/delete-multiple', auth, categoriesController.dele
 router.get('/admin/categories', auth, categoriesController.getAll);
 router.get('/admin/categoriesWithProducts', auth, categoriesController.listCategoriesWithProducts);
 router.get('/admin/categories/:categoryId', auth, categoriesController.get);
-router.put('/admin/categories/:categoryId', auth, categoriesController.update);
+router.put('/admin/categories/name/:categoryId', auth, categoriesController.updateName);
+router.put('/admin/categories', auth, categoriesController.update);
 router.delete('/admin/categories/:categoryId', auth, categoriesController.delete);
 
 // Product
 router.get('/admin/products', auth, productsController.getAll);
+router.get('/admin/products/:id', auth, productsController.getProduct);
 router.post('/admin/products', auth, productsController.create);
 router.put('/admin/products/:productId', auth, productsController.update);
 router.post('/admin/products/delete-multiple', auth, productsController.deleteMultiple);

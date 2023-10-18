@@ -1,18 +1,41 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductsModel.js';
-import Categories from '../../models/CategoriesModel.js';
 import { upload } from '../../settings/multer.js';
 
 class ProductController {
   async getAll(req, res) {
+    const company = req.headers._id;
+    const page = parseInt(req.query.page) || 1;
+    const perPage = 10; 
+
     try {
-      const products = await Model.find()
+      const totalProducts = await Model.countDocuments({ company });
+      const totalPages = Math.ceil(totalProducts / perPage);
+
+      const products = await Model.find({ company })
         .populate('category', 'title')
+        .skip((page - 1) * perPage)
+        .limit(perPage)
         .exec();
 
-      return res.status(200).json(products);
+      return res.status(200).json({ products, totalPages, page });
     } catch (error) {
       console.log(error);
+      return res.status(500).json({ error: 'Erro ao obter os produtos.' });
+    }
+  }
+
+  async getProduct(req, res) {
+    try {
+      const company = req.headers._id;
+      const { id } = req.params;
+
+      const product = await Model.findById(id).populate('category', 'title')
+
+      return res.status(200).json(product);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
 
@@ -28,26 +51,26 @@ class ProductController {
           discountPrice,
           isActive,
           category,
-          complements 
+          complements
         } = req.body;
         complements = complements || "[]";
         const images = [];
 
         if (!name.trim().length) {
-          return res.status(400).json({ 
-            success: false, 
-            message: 'Nome não pode ficar em branco' 
+          return res.status(400).json({
+            success: false,
+            message: 'Nome não pode ficar em branco'
           });
         }
 
-        if (typeof(Number(price)) !== 'number') {
+        if (typeof (Number(price)) !== 'number') {
           return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
 
         if (req.files.length) {
           const uploadPromises = req.files.map(file => {
             return cloudinary.uploader.upload(file.path, { folder: company });
-          })
+          });
           const uploads = await Promise.all(uploadPromises);
           uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
         }
@@ -103,18 +126,18 @@ class ProductController {
 
       productIds.forEach(async (id) => {
         product = await Model.findByIdAndDelete(id, { new: true });
-        if(product.images.length) {
+        if (product.images.length) {
           product.images.map(async (id) => await cloudinary.uploader.destroy(id));
         }
       });
 
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       const products = await Model.find();
 
       return res.status(200).json(products);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       const _idCompany = req.headers._id;
 
       await LogModel.create({ _idCompany, message: error, info: product });
