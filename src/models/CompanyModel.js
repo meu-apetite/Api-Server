@@ -10,7 +10,8 @@ const companySchema = new Schema({
   active: { type: Boolean, default: true },
   owner: {
     name: { type: String, required: true },
-    lastName: String,
+    telefone: { type: String },
+    email: { type: String },
     sexo: String,
   },
   login: {
@@ -21,6 +22,7 @@ const companySchema = new Schema({
     state: { type: String, trim: true },
     city: { type: String, trim: true },
     number: { type: Number, trim: true },
+    reference: { type: String, trim: true },
     street: { type: String, trim: true },
     district: { type: String, trim: true },
     zipCode: { type: String, maxLength: 8 },

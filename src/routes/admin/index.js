@@ -19,7 +19,8 @@ router.post('/admin/company/gallery', auth, controller.addImageGallery);
 router.delete('/admin/company/gallery/:id', auth, controller.removeImageGallery);
 router.post('/admin/company/logo', auth, controller.addImageLogo);
 router.delete('/admin/company/logo/:id', auth, controller.removeImageLogo);
-router.post('/admin/company/updateAddress', auth, controller.updateAddress);
+router.get('/admin/company/address', auth, controller.getAddress);
+router.put('/admin/company/address', auth, controller.updateAddress);
 
 // Category
 router.post('/admin/categories', auth, categoriesController.create);

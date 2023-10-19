@@ -30,8 +30,12 @@ class ProductController {
       const company = req.headers._id;
       const { id } = req.params;
 
-      const product = await Model.findById(id).populate('category', 'title')
-
+      const product = await Model.findById(id)
+        .populate({ path: 'complements' })
+        .populate({ path: 'category', select: 'title' })
+  
+  // 'product' agora conterá os campos 'category' e 'complements' populados com os dados correspondentes dos modelos relacionados
+  
       return res.status(200).json(product);
     } catch (error) {
       console.log(error);

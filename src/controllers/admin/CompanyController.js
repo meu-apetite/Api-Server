@@ -145,6 +145,8 @@ class CompanyController {
       const response = await axios.get(api + `/${encodeURIComponent(query)}.json?key=${key}`);
       const result = response.data.results[0];
 
+      console.log(data)
+
       const updateAddress = {
         state: result.address.countrySubdivision,
         city: result.address.municipality,
@@ -156,7 +158,8 @@ class CompanyController {
           longitude: result.position.lon
         },
         freeformAddress: result.address.freeformAddress,
-        number: data.number
+        number: data.number,
+        reference: data.reference
       }
 
       const company = await Model.findOneAndUpdate(
@@ -170,6 +173,16 @@ class CompanyController {
       console.error(error);
     }
   };
+
+  async getAddress(req, res) {
+    try {
+      const companyId = req.headers._id;
+      const address = await Model.findById(companyId, 'address');
+      return res.status(200).json(address);      
+    } catch (error) {
+      return res.status(400).json({ success: false });      
+    }
+  }
 }
 
 export default CompanyController;
