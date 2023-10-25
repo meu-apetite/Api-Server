@@ -4,11 +4,15 @@ import CompanyController from '../../controllers/admin/CompanyController.js';
 import ProductsController from '../../controllers/admin/ProductsController.js';
 import CategoriesController from '../../controllers/admin/CategoriesController.js';
 import ComplementController from '../../controllers/admin/ComplementController.js';
+import OrdersController from '../../controllers/admin/OrdersController.js';
+import PaymentsMethodsController from '../../controllers/admin/PaymentsMethodController.js';
 
-const categoriesController = new CategoriesController();
 const controller = new CompanyController();
+const categoriesController = new CategoriesController();
 const productsController = new ProductsController();
 const complementController = new ComplementController();
+const ordersController = new OrdersController();
+const paymentsMethodsController = new PaymentsMethodsController();
 
 const router = Router();
 
@@ -21,6 +25,9 @@ router.post('/admin/company/logo', auth, controller.addImageLogo);
 router.delete('/admin/company/logo/:id', auth, controller.removeImageLogo);
 router.get('/admin/company/address', auth, controller.getAddress);
 router.put('/admin/company/address', auth, controller.updateAddress);
+router.get('/admin/company/payments', auth, controller.getPaymentOptions);
+router.put('/admin/company/payments', auth, controller.updatePaymentsMethods);
+router.put('/admin/company/paymentonline/mp', auth, controller.updateCredentialsMercadoPago);
 
 // Category
 router.post('/admin/categories', auth, categoriesController.create);
@@ -41,8 +48,13 @@ router.post('/admin/products/delete-multiple', auth, productsController.deleteMu
 router.delete('/admin/products/deleteImage/:imageId/productId/:productId', auth, productsController.deleteImage);
 router.post('/admin/products/updateImage/productId/:productId', auth, productsController.updateImage);
 
+// Orders
+router.get('/admin/orders', auth, ordersController.getAll);
+
+// Payment methods
+router.get('/admin/paymentsmethods', auth, paymentsMethodsController.getAll);
+
 // Complement
-// router.get('/admin/complement', auth, productsController.getAll);
 router.post('/admin/complement', auth, complementController.create);
 
 export default router;

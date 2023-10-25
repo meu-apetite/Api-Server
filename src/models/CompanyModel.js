@@ -26,7 +26,7 @@ const companySchema = new Schema({
     street: { type: String, trim: true },
     district: { type: String, trim: true },
     zipCode: { type: String, maxLength: 8 },
-    coordinates: { latitude: Number, longitude: Number},
+    coordinates: { latitude: Number, longitude: Number },
     freeformAddress: { type: String, trim: true }
   },
   delivery: {
@@ -38,6 +38,10 @@ const companySchema = new Schema({
     googleMapUrl: String,
     gallery: [{ url: String, id: String }]
   },
-});
+  paymentsMethods: [{ id: String, title: String }],
+  paymentOnline: {
+    credentialsMP: { publicKey: String, accessToken: String  }
+  }
+}); 
 
 export default mongoose.model('companies', companySchema);

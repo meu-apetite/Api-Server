@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
-import Model from '../models/CompanyModel.js';
-import Validation from '../utils/Validation.js';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import Model from '../models/CompanyModel.js';
+import Validation from '../utils/Validation.js';
 const checkValidation = new Validation();
 dotenv.config();
 
@@ -18,21 +18,49 @@ class Auth {
         if (validation !== true) messages.push(validation);
       });
 
-      console.log(messages)
-
-      if (messages.length) res.status(400).json({ success: false, message: `${messages.join(", ")}` });
+      if (messages.length) {
+        res.status(400).json({
+          success: false, message: `${messages.join(", ")}`
+        });
+        return;
+      }
 
       await Model.create({
         fantasyName: data.fantasyName,
         whatsapp: data.whatsapp,
         owner: { name: data.ownerName },
-        login: { email: data.email, password: bcrypt.hashSync(data.password, 12) },
+        login: {
+          email: data.email,
+          password: bcrypt.hashSync(data.password, 12)
+        },
+        paymentsMethods: [
+          { id: 'dinheiro', title: 'Dinehiro' },
+          { id: 'pix', title: 'Pix' },
+          { id: 'mastercard-debito', title: 'Mastercard' },
+          { id: 'visa-debito', title: 'Visa' },
+          { id: 'elo-debito', title: 'Elo' },
+          { id: 'hipercard-debito', title: 'Hipercard' },
+          { id: 'hipercard-credito', title: 'Hipercard' },
+          { id: 'visa-credito', title: 'Visa' },
+          { id: 'nugo-credito', title: 'Nugo' },
+          { id: 'mastercard-credito', title: 'Mastercard' },
+          { id: 'elo-credito', title: 'Elo' },
+          { id: 'amex-credito', title: 'Amex' },
+          { id: 'vr-refeicao', title: 'VR Refeição' },
+          { id: 'sodexo-refeicao', title: 'Sodexo Refeição' },
+          { id: 'ticket-refeicao', title: 'Ticket' },
+        ]
       });
 
-      return res.status(200).json({ success: true, message: 'Cadastro feito com sucesso!' });
+      return res.status(200).json({ 
+        success: true, message: 'Cadastro feito com sucesso!'
+      });
     } catch (error) {
-      console.log(error)
-      res.status(400).json({ success: false, message: 'Erro: confira os campos e tente novamente.' });
+      console.log(error);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Erro: confira os campos e tente novamente.' 
+      });
     }
   }
 
@@ -42,14 +70,22 @@ class Auth {
 
       //Validation
       if (!checkValidation.email(data.email)) {
-        return res.status(401).json({ success: false, message: 'Email inválido!' });
+        return res.status(401).json({ 
+          success: false, message: 'Email inválido!' 
+        });
       }
 
-      const company = await Model.findOne({ 'login.email': data.email })
+      const company = await Model
+        .findOne({ 'login.email': data.email })
         .select('name login');
 
-      if (!company || !bcrypt.compareSync(data.password, company.login.password)) {
-        return res.status(401).json({ success: false, message: 'Senha ou email incorreto!' });
+      if (
+        !company || 
+        !bcrypt.compareSync(data.password, company.login.password)
+      ) {
+        return res.status(401).json({ 
+          success: false, message: 'Senha ou email incorreto!' 
+        });
       }
 
       const token = jwt.sign(
@@ -58,11 +94,15 @@ class Auth {
         { expiresIn: '2h' }
       );
 
-      return res.status(200).json({ success: true, message: 'Logado.', token, _id: company._id  });
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Logado.', 
+        token, _id: company._id 
+      });
     } catch (error) {
       return res
         .status(400)
-        .json({ success: false, message: 'Houve um erro de comunicação na rede.'});
+        .json({ success: false, message: 'Houve um erro de comunicação na rede.' });
     }
   }
 }

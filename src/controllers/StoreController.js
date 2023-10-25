@@ -1,9 +1,10 @@
 import ProductModel from '../models/ProductsModel.js';
-import StoreModel from '../models/CompanyModel.js';
+import CompanyModel from '../models/CompanyModel.js';
+import OrdersModel from '../models/OrdersModel.js';
 import mercadopago from 'mercadopago';
 import axios from 'axios';
-import OrdersModel from '../models/OrdersModel .js';
 import Stripe from 'stripe';
+import listPaymentMethod from "../utils/listPaymentMethod.js";
 
 
 const api = 'https://api.tomtom.com/search/2/geocode';
@@ -31,7 +32,7 @@ class StoreController {
     try {
       const companyId = req.params?.companyId;
 
-      const store = await StoreModel.findById(companyId)
+      const store = await CompanyModel.findById(companyId)
         .select('fantasyName custom address');
 
       return res.status(200).json(store);
@@ -111,8 +112,8 @@ class StoreController {
 
       const result = await this.estimateValueFromData(listProduct);
 
+      console.log((result))
       if (result) {
-        console.log(result);
         return res.status(200).json(result);
       } else {
         return res.status(500).json({ error: "An error occurred" });
@@ -146,7 +147,7 @@ class StoreController {
       const responseClientAddress = await axios.get(api + `/${encodeURIComponent(query)}.json?key=${key}`);
       const result = responseClientAddress.data.results[0];
 
-      const company = await StoreModel.findById('644d03bb1169fea569ff4348').select('address');
+      const company = await CompanyModel.findById('644d03bb1169fea569ff4348').select('address');
       const queryCalculate = `${company.address.coordinates.latitude},${company.address.coordinates.longitude}:${result.position.lat},${result.position.lon}`;
       const responseCalculate = await axios.get(`https://api.tomtom.com/routing/1/calculateRoute/${queryCalculate}/json?key=${key}`);
 
@@ -155,13 +156,9 @@ class StoreController {
       const totalCost = distanceInKm * costPerKm;
 
       const estimateValue = await this.estimateValueFromData(items);
-      const mercadopago = await this.payment();
-      
-  
-      const order = await OrdersModel.create({
+
+      return res.status(200).json({
         ...estimateValue,
-        payment: { mercadoPagoId: mercadopago },
-        status: 'in-cart',
         delivery: {
           type: 'delivery',
           destination: { latitude: result.position.lat, longitude: result.position.lon },
@@ -169,30 +166,28 @@ class StoreController {
           price: totalCost
         }
       });
-
-      console.log(order);
-
-      return res.status(200).json(order);
     } catch (error) {
       console.error(error);
     }
   };
 
-  async generateStripeSession(req, res) {
-    const YOUR_DOMAIN = 'http://localhost:3000';
-    const session = await stripe.checkout.sessions.create({
-      line_items: [{ price: 'pr_1234', quantity: 1 }],
-      mode: 'payment',
-      success_url: `${YOUR_DOMAIN}?success=true`,
-      cancel_url: `${YOUR_DOMAIN}?canceled=true`,
-    });
+  async getPaymentOptions(req, res) {
+    try {
+      const { companyId } = req.params;
 
-    console.log(session)
-   
-    res.json(session);
-  };
+      const response = await CompanyModel.findById(companyId, 'paymentsMethods paymentOnline');
 
-  async generateIdMercadoPago(req, res) {
+      return res.status(200).json({ 
+        activeItems: response.paymentsMethods, 
+        paymentOnline: response.paymentOnline, 
+        listPaymentMethod 
+      });
+    } catch (error) {
+      return res.status(400).json({ success: false });
+    }
+  }
+
+  async getPreferenceIdMp(products) {
     try {
       mercadopago.configure({ access_token: 'TEST-1944498221096339-010600-f3917d8d9a0242baa5b2236a9d4ac87e-225270724' });
 

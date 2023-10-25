@@ -4,6 +4,11 @@ const { Schema } = mongoose;
 const orderStatusEnum = ['in-cart', 'awaiting-approval', 'approved', 'ready', 'delivered'];
 
 const ordersSchema = new Schema({
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'companies',
+    require: true,
+  },
   status: {
     type: String,
     enum: orderStatusEnum,

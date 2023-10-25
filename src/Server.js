@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 
 import routeAdmin from './routes/admin/index.js';
-import routeAuth from './routes/auth.js';
-import routeStore from './routes/store.js'
+import routeAuth from './routes/auth/index.js';
+import routeStore from './routes/store/index.js';
 
 import './settings/cloudinary.js';
 import './settings/database.js';

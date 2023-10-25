@@ -145,22 +145,20 @@ class CompanyController {
       const response = await axios.get(api + `/${encodeURIComponent(query)}.json?key=${key}`);
       const result = response.data.results[0];
 
-      console.log(data)
-
       const updateAddress = {
         state: result.address.countrySubdivision,
         city: result.address.municipality,
         street: result.address.streetName,
         district: result.address.municipalitySubdivision,
         zipCode: result.address.extendedPostalCode,
-        coordinates: { 
-          latitude: result.position.lat, 
+        coordinates: {
+          latitude: result.position.lat,
           longitude: result.position.lon
         },
         freeformAddress: result.address.freeformAddress,
         number: data.number,
         reference: data.reference
-      }
+      };
 
       const company = await Model.findOneAndUpdate(
         { _id: companyId },
@@ -178,9 +176,96 @@ class CompanyController {
     try {
       const companyId = req.headers._id;
       const address = await Model.findById(companyId, 'address');
-      return res.status(200).json(address);      
+      return res.status(200).json(address);
     } catch (error) {
-      return res.status(400).json({ success: false });      
+      return res.status(400).json({ success: false });
+    }
+  }
+
+  async getPaymentOptions(req, res) {
+    try {
+      const companyId = req.headers._id;
+      const credentialsMP = { accessToken: false, publicKey: true};
+
+      const response = await Model.findById(companyId, 'paymentsMethods paymentOnline');
+      
+      if(response?.paymentOnline?.credentialsMP?.accessToken) {
+        credentialsMP.accessToken = true;
+      }
+
+      if(response?.paymentOnline?.credentialsMP?.publicKey) {
+        credentialsMP.publicKey = true;
+      }
+
+      response.paymentOnline.credentialsMP = credentialsMP;
+
+      return res.status(200).json(response);
+    } catch (error) {
+      return res.status(400).json({ success: false });
+    }
+  }
+
+  async updatePaymentsMethods(req, res) {
+    try {
+      const data = req.body;
+      const companyId = req.headers._id;
+      const response = await Model.findByIdAndUpdate(
+        companyId, { paymentsMethods: data }, { new: true }
+      );
+
+      return res.status(200).json(response.paymentsMethods);
+    } catch (error) {
+      return res.status(400).json({ success: false });
+    }
+  }
+
+  async updatePaymentsMethods(req, res) {
+    try {
+      const data = req.body;
+      const companyId = req.headers._id;
+      const response = await Model.findByIdAndUpdate(
+        companyId, { paymentsMethods: data }, { new: true }
+      );
+
+      return res.status(200).json(response.paymentsMethods);
+    } catch (error) {
+      return res.status(400).json({ success: false });
+    }
+  }
+
+  async updateCredentialsMercadoPago(req, res) {
+    try {
+      const { credentials } = req.body; //credentials: { publicKey: String, accessToken: String }
+      const companyId = req.headers._id;
+      let update;
+
+      if (!credentials || credentials == {}) {
+        return res.status(400).json({ success: false, message: 'As credênciais estão vazias' });
+      }
+
+      if (credentials?.publicKey?.length > 1 && credentials?.accessToken?.length > 1) {
+        update = { 'paymentOnline.credentialsMP': credentials };
+      } else {
+        if (credentials?.publicKey?.length > 1) {
+          update = {
+            'paymentOnline.credentialsMP.publicKey': credentials.publicKey
+          };
+        };
+        if (credentials?.accessToken?.length > 1) {
+          update = {
+            'paymentOnline.credentialsMP.accessToken': credentials.accessToken
+          };
+        }
+      }
+    
+      await Model.findByIdAndUpdate(companyId, { $set: update });
+      
+      return res.status(200).json({ 
+        success: true, credentials: { publicKey: true, accessToken: true } 
+      });
+    } catch (error) {
+      console.log(error)
+      return res.status(400).json({ success: false });
     }
   }
 }
