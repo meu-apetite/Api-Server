@@ -28,6 +28,7 @@ router.put('/admin/company/address', auth, controller.updateAddress);
 router.get('/admin/company/payments', auth, controller.getPaymentOptions);
 router.put('/admin/company/payments', auth, controller.updatePaymentsMethods);
 router.put('/admin/company/paymentonline/mp', auth, controller.updateCredentialsMercadoPago);
+// router.put('/admin/company/subscription', auth, controller.subscription);
 
 // Category
 router.post('/admin/categories', auth, categoriesController.create);

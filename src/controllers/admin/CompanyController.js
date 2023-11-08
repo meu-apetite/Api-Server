@@ -268,6 +268,21 @@ class CompanyController {
       return res.status(400).json({ success: false });
     }
   }
+
+  async subscription(req, res) {
+    console.log(req.body)
+
+    subscription = {
+      endpoint:
+        'https://fcm.googleapis.com/fcm/send/dMtwGLB3r0c:APA91bE_ghXAcdXdQoNeldKUtO9v5O3bX0pD9lumyWx4Q5d6G_7forYsaVZWKsibciXjFFdXMns0Z_1osIyI5KPYJrseYUsg7Ij14evL1zLS4ylHzddPQL0u-b_S79-RjBUWf3Rdcl8J',
+      keys: {
+        p256dh:
+          'BEWE-_Nlv3upfzeUZ-PK3uq5JpPdSZyXHkO8xBWTRHXgduXFl1silPjG7f_QHberIklX1TbtZBO10PK5WS5lySw',
+        auth: 'ydjPabeW0jw8DiaWXUM8Qg',
+      },
+    };
+
+  }
 }
 
 export default CompanyController;

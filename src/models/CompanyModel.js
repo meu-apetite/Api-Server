@@ -29,19 +29,15 @@ const companySchema = new Schema({
     coordinates: { latitude: Number, longitude: Number },
     freeformAddress: { type: String, trim: true }
   },
-  delivery: {
-    active: Boolean,
-    priceKm: Number
-  },
+  delivery: { active: Boolean, priceKm: Number },
   custom: {
     logo: { url: String, id: String },
     googleMapUrl: String,
     gallery: [{ url: String, id: String }]
   },
   paymentsMethods: [{ id: String, title: String }],
-  paymentOnline: {
-    credentialsMP: { publicKey: String, accessToken: String  }
-  }
+  paymentOnline: { credentialsMP: { publicKey: String, accessToken: String } },
+  subscription: { endpoint: String, keys: { p256dh: String, auth: String } }
 }); 
 
 export default mongoose.model('companies', companySchema);

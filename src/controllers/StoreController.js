@@ -1,15 +1,16 @@
 import ProductModel from '../models/ProductsModel.js';
 import CompanyModel from '../models/CompanyModel.js';
 import OrdersModel from '../models/OrdersModel.js';
+import jwt from 'jsonwebtoken';
 import mercadopago from 'mercadopago';
 import axios from 'axios';
-import Stripe from 'stripe';
 import listPaymentMethod from "../utils/listPaymentMethod.js";
+import { NotificationService } from '../services/NotificationService.js';
+import { EmailService } from '../services/EmailService.js';
 
 
 const api = 'https://api.tomtom.com/search/2/geocode';
 const key = 'GmL5wOEl3iWP0n1l6O5sBV0XKo6gHwht';
-const stripe = new Stripe('sk_test_Ho24N7La5CVDtbmpjc377lJI');
 
 class StoreController {
   async getAllProduct(req, res) {
@@ -33,11 +34,18 @@ class StoreController {
       const companyId = req.params?.companyId;
 
       const store = await CompanyModel.findById(companyId)
-        .select('fantasyName custom address');
+        .select('fantasyName custom address subscription');
+
+      const notificationService = new NotificationService(
+        store.subscription.endpoint, store.subscription.keys
+      );
+
+      // const not = await notificationService.send('E aí seu otáriooo!', 'Fala tu, blz????????');
+      // console.log(not);
 
       return res.status(200).json(store);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
@@ -60,7 +68,7 @@ class StoreController {
       let priceTotal = 0;
 
       for (const item of listProduct) {
-        const product = await ProductModel.findById(item.productId)
+        const product = await ProductModel.findById('6521bcfef5dac76881e66620')
           .populate({ path: 'complements', select: '-company' })
           .select('name price images.url')
           .exec();
@@ -69,20 +77,22 @@ class StoreController {
         let price = 0;
         const complements = [];
 
-        item.complements.map((option) => {
-          const resultComplements = product.complements.find(c => c._id.toString() == option.parentId);
-          const resultOption = resultComplements.options.find(o => o._id == option.id);
+        if (product.complements.length) {
+          item.complements.map((option) => {
+            const resultComplements = product.complements.find(c => c._id.toString() == option.parentId);
+            const resultOption = resultComplements.options.find(o => o._id == option.id);
 
-          for (let i = 0; i < option.quantity; i++) {
-            priceOption += resultOption.price;
-            complements.push({
-              name: resultOption.name,
-              price: resultOption.price,
-              parentId: option.parentId,
-              _id: resultOption._id
-            });
-          }
-        });
+            for (let i = 0; i < option.quantity; i++) {
+              priceOption += resultOption.price;
+              complements.push({
+                name: resultOption.name,
+                price: resultOption.price,
+                parentId: option.parentId,
+                _id: resultOption._id
+              });
+            }
+          });
+        }
 
         for (let i = 0; i < item.quantity; i++) {
           price += (product.price + priceOption);
@@ -102,24 +112,18 @@ class StoreController {
 
       return { products: requestInfo, total: priceTotal };
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
   estimateValue = async (req, res) => {
     try {
       const listProduct = [...req.body];
-
       const result = await this.estimateValueFromData(listProduct);
-
-      console.log((result))
-      if (result) {
-        return res.status(200).json(result);
-      } else {
-        return res.status(500).json({ error: "An error occurred" });
-      }
+      const productsToken = jwt.sign(result, process.env.TOKEN_KEY, { expiresIn: '120 days' });
+      return res.status(200).json({ productsToken, ...result });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return res.status(500).json({ error: "An error occurred" });
     }
   };
@@ -141,7 +145,7 @@ class StoreController {
       *  **/
 
     try {
-      const { address, items, storeId } = req.body;
+      const { address } = req.body;
 
       const query = `${address.street},${address.number},${address.zipCode},${address.district},${address.city}`;
       const responseClientAddress = await axios.get(api + `/${encodeURIComponent(query)}.json?key=${key}`);
@@ -155,52 +159,99 @@ class StoreController {
       const costPerKm = 5;
       const totalCost = distanceInKm * costPerKm;
 
-      const estimateValue = await this.estimateValueFromData(items);
+      const addressResult = {
+        destination: { latitude: result.position.lat, longitude: result.position.lon },
+        distance: distanceInKm,
+        price: totalCost,
+        number: result.address.streetNumber,
+        street: result.address.streetName,
+        district: result.address.municipalitySubdivision,
+        city: result.address.municipality,
+        freeformAddress: result.address.freeformAddress
+      };
 
-      return res.status(200).json({
-        ...estimateValue,
-        delivery: {
-          type: 'delivery',
-          destination: { latitude: result.position.lat, longitude: result.position.lon },
-          distance: distanceInKm,
-          price: totalCost
-        }
-      });
+      const addressToken = jwt.sign(addressResult, process.env.TOKEN_KEY, { expiresIn: '120 days' });
+
+      return res.status(200).json({ address: addressResult, addressToken });
     } catch (error) {
       console.error(error);
     }
   };
 
-  async getPaymentOptions(req, res) {
+  async getPreferenceIdMp(products) {
+    try {
+      console.log(products);
+      mercadopago.configure({ access_token: 'TEST-1944498221096339-010600-f3917d8d9a0242baa5b2236a9d4ac87e-225270724' });
+      const preference = {
+        items: products?.map((item) => ({
+          title: item.name, unit_price: item.total, quantity: item.quantity
+        }))
+      };
+      const response = await mercadopago.preferences.create(preference);
+      return response.body.id;
+    } catch (error) {
+      console.error('erroo ', error);
+    }
+  }
+
+  getPaymentOptions = async (req, res) => {
     try {
       const { companyId } = req.params;
+      const { products } = req.body;
 
+      const preferenceId = await this.getPreferenceIdMp(products);
       const response = await CompanyModel.findById(companyId, 'paymentsMethods paymentOnline');
 
-      return res.status(200).json({ 
-        activeItems: response.paymentsMethods, 
-        paymentOnline: response.paymentOnline, 
-        listPaymentMethod 
+      return res.status(200).json({
+        activeItems: response.paymentsMethods,
+        paymentOnline: {
+          ...response.paymentOnline,
+          credentialsMP: {
+            ...response.paymentOnline.credentialsMP,
+            preferenceId
+          }
+        },
+        listPaymentMethod
       });
     } catch (error) {
       return res.status(400).json({ success: false });
     }
-  }
+  };
 
-  async getPreferenceIdMp(products) {
+  async finishOrder(req, res) {
+    //deliveryType: 'pickup', paymentMethod: 'dinheiro', paymentType: 'inDelivery', products: [{}] 
     try {
-      mercadopago.configure({ access_token: 'TEST-1944498221096339-010600-f3917d8d9a0242baa5b2236a9d4ac87e-225270724' });
+      const { companyId } = req.params;
+      const { productsToken, addressToken, deliveryType, paymentType } = req.body;
+      const products = jwt.decode(productsToken).products;
+      const address = jwt.decode(addressToken);
 
-      let preference = {
-        items: [
-          { title: 'My Item', unit_price: 100, quantity: 1 },
-          { title: 'My Item', unit_price: 100, quantity: 1 },
-        ]
-      };
+      const order = await OrdersModel.create({
+        company: companyId,
+        deliveryType,
+        products,
+        address,
+        paymentType,
+        status: 'awaiting-approval'
+      });
 
-      const response = await mercadopago.preferences.create(preference);
+      const store = await CompanyModel.findById(companyId)
+        .select('fantasyName custom address subscription');
 
-      return res.json({ id: response.body.id });
+      const notificationService = new NotificationService(
+        store.subscription.endpoint, store.subscription.keys
+      );
+
+      await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
+      
+      new EmailService().send({
+        to: "gneris.gs@gmail.com", 
+        subject: "Novo pedido!",
+        text: "Você tem um novo pedido"
+      });
+
+      return res.json({});
+
     } catch (error) {
       console.log('erroo ', error);
     }

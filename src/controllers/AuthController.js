@@ -67,7 +67,7 @@ class Auth {
   async login(req, res) {
     try {
       const data = { ...req.body };
-
+      
       //Validation
       if (!checkValidation.email(data.email)) {
         return res.status(401).json({ 
@@ -88,6 +88,10 @@ class Auth {
         });
       }
 
+      delete data.subscription.expirationTime;
+
+      await Model.findByIdAndUpdate(company._id, { subscription: data.subscription });
+
       const token = jwt.sign(
         { id: company._id, email: company.login.email },
         process.env.TOKEN_KEY,
@@ -100,6 +104,7 @@ class Auth {
         token, _id: company._id 
       });
     } catch (error) {
+      console.log(error)
       return res
         .status(400)
         .json({ success: false, message: 'Houve um erro de comunicação na rede.' });

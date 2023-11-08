@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
-const orderStatusEnum = ['in-cart', 'awaiting-approval', 'approved', 'ready', 'delivered'];
+const orderStatusEnum = ['awaiting-approval', 'ready', 'delivered'];
 
 const ordersSchema = new Schema({
   company: {
@@ -22,22 +22,26 @@ const ordersSchema = new Schema({
     imageUrl: String,
     priceTotal: Number
   }],
-  payment: {
-    mercadoPagoId: String
+  paymentType: {
+    type: String,
+    enum: ['online', 'indelivery'],
+    required: true
   },
-  delivery: {
-    type: {
-      type: String,
-      enum: ['pickup', 'delivery'],
-      required: true
-    },
-    destination: {
-      latitude: Number,
-      longitute: Number
-    },
+  deliveryType: {
+    type: String,
+    enum: ['pickup', 'delivery'],
+    required: true
+  },
+  address: {
+    destination: { latitude: Number, longitude: Number },
     distance: Number,
-    price: Number
-  },  
+    price: Number,
+    number: String,
+    street: String,
+    district: String,
+    city: String,
+    freeformAddress: String
+  },
   total: Number
 });
 
