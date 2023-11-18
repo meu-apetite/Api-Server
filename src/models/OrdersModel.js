@@ -1,13 +1,19 @@
+import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
-
 const orderStatusEnum = ['awaiting-approval', 'ready', 'delivered'];
 
 const ordersSchema = new Schema({
+  id: Number,
   company: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'companies',
     require: true,
+  },
+  client: {
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
   },
   status: {
     type: String,
@@ -42,7 +48,19 @@ const ordersSchema = new Schema({
     city: String,
     freeformAddress: String
   },
+  date: { type: Date, default: () => moment().tz('America/Sao_Paulo') },
   total: Number
+});
+
+
+ordersSchema.pre('save', function(next) {
+  const doc = this;
+  mongoose.model('Orders', ordersSchema, 'orders').findOne({}, {}, { sort: { 'id': -1 } }).exec(function(err, result) {
+    let lastId = 0;
+    if (result && result.id) lastId = result.id;
+    doc.id = lastId + 1;
+    next();
+  });
 });
 
 export default mongoose.model('orders', ordersSchema);

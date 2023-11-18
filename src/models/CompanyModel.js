@@ -10,9 +10,8 @@ const companySchema = new Schema({
   active: { type: Boolean, default: true },
   owner: {
     name: { type: String, required: true },
-    telefone: { type: String },
+    phoneNumber: { type: String },
     email: { type: String },
-    sexo: String,
   },
   login: {
     email: { type: String, required: true, unique: true },
@@ -37,7 +36,8 @@ const companySchema = new Schema({
   },
   paymentsMethods: [{ id: String, title: String }],
   paymentOnline: { credentialsMP: { publicKey: String, accessToken: String } },
-  subscription: { endpoint: String, keys: { p256dh: String, auth: String } }
+  subscription: { endpoint: String, keys: { p256dh: String, auth: String } },
+  views: Number
 }); 
 
 export default mongoose.model('companies', companySchema);

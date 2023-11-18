@@ -5,9 +5,10 @@ import axios from 'axios';
 
 class CompanyController {
   async getCompany(req, res) {
-    const companyId = req.headers._id;
-    const company = await Model.findById(companyId);
-    return res.status(200).json(company);
+ 
+      const companyId = req.headers._id;
+      const company = await Model.findById(companyId);
+      return res.status(200).json(company);
   }
 
   async getData(req, res) {
@@ -22,6 +23,29 @@ class CompanyController {
         googleMapUrl: company.custom.googleMapUrl,
         galleryImages: company.custom.galleryImages,
       });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getInfoAdmin(req, res) {
+    try {
+      const id = req.headers._id;
+      const company = await Model.findById(id, 'owner');
+      return res.status(200).json(company.owner);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async updateInfoAdmin(req, res) {
+    try {
+      const id = req.headers._id;
+      const { phoneNumber, name, email } = req.body;
+      const company = await Model.findByIdAndUpdate(
+        id, {$set: { 'owner': { phoneNumber, name, email } }}, { new: true }
+      );
+      return res.status(200).json(company.owner);
     } catch (error) {
       console.log(error);
     }

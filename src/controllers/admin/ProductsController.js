@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductsModel.js';
 import { upload } from '../../settings/multer.js';
+import fs from 'fs';
 
 class ProductController {
   async getAll(req, res) {
@@ -43,6 +44,7 @@ class ProductController {
 
   async create(req, res) {
     upload.array('images')(req, res, async (err) => {
+      console.log(err)
       try {
         const company = req.headers._id;
         let {
@@ -89,6 +91,14 @@ class ProductController {
           price: Number(price),
           complements: JSON.parse(complements)
         });
+
+        // fs.unlink(caminho, (erro) => {
+        //   if (erro) {
+        //     console.error('Erro ao excluir a imagem:', erro);
+        //   } else {
+        //     console.log('Imagem excluída com sucesso!');
+        //   }
+        // });
 
         res.status(200).json(product);
       } catch (error) {

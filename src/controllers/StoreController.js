@@ -32,17 +32,23 @@ class StoreController {
   async getStore(req, res) {
     try {
       const companyId = req.params?.companyId;
-
       const store = await CompanyModel.findById(companyId)
         .select('fantasyName custom address subscription');
 
-      const notificationService = new NotificationService(
-        store.subscription.endpoint, store.subscription.keys
-      );
+      return res.status(200).json(store);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-      // const not = await notificationService.send('E aí seu otáriooo!', 'Fala tu, blz????????');
-      // console.log(not);
-
+  async getStoreView(req, res) {
+    try {
+      const companyId = req.params?.companyId;
+      const store = await CompanyModel.findByIdAndUpdate(
+        companyId,
+        { $inc: { views: 1 } },
+        { new: true } 
+      ).select('fantasyName custom address subscription')
       return res.status(200).json(store);
     } catch (error) {
       console.error(error);
@@ -222,7 +228,15 @@ class StoreController {
     //deliveryType: 'pickup', paymentMethod: 'dinheiro', paymentType: 'inDelivery', products: [{}] 
     try {
       const { companyId } = req.params;
-      const { productsToken, addressToken, deliveryType, paymentType } = req.body;
+      const { 
+        productsToken, 
+        addressToken, 
+        deliveryType, 
+        paymentType, 
+        email, 
+        name,
+        phoneNumber 
+      } = req.body;
       const products = jwt.decode(productsToken).products;
       const address = jwt.decode(addressToken);
 
@@ -232,6 +246,7 @@ class StoreController {
         products,
         address,
         paymentType,
+        client: { email, name, phoneNumber },
         status: 'awaiting-approval'
       });
 
@@ -244,13 +259,21 @@ class StoreController {
 
       await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
       
-      new EmailService().send({
+      //store email
+      await new EmailService().send({
         to: "gneris.gs@gmail.com", 
         subject: "Novo pedido!",
         text: "Você tem um novo pedido"
       });
 
-      return res.json({});
+      //client email
+      await new EmailService().send({
+        to: email.trim(), 
+        subject: "Pedido recibo!",
+        text: `Olá ${name.trim()}, obrigado por ter comprado conosco, seu pedido está em preparo`
+      });
+
+      return res.json({ order, store });
 
     } catch (error) {
       console.log('erroo ', error);

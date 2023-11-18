@@ -25,6 +25,8 @@ router.post('/admin/company/logo', auth, controller.addImageLogo);
 router.delete('/admin/company/logo/:id', auth, controller.removeImageLogo);
 router.get('/admin/company/address', auth, controller.getAddress);
 router.put('/admin/company/address', auth, controller.updateAddress);
+router.get('/admin/company/owner', auth, controller.getInfoAdmin);
+router.put('/admin/company/owner', auth, controller.updateInfoAdmin);
 router.get('/admin/company/payments', auth, controller.getPaymentOptions);
 router.put('/admin/company/payments', auth, controller.updatePaymentsMethods);
 router.put('/admin/company/paymentonline/mp', auth, controller.updateCredentialsMercadoPago);

@@ -18,12 +18,10 @@ class CategoriesController {
 
       return res.status(200).json(categories);
     } catch (error) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Falha na requisição, tente novamente mais tarde',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Falha na requisição, tente novamente mais tarde',
+      });
     }
   }
 
@@ -51,12 +49,10 @@ class CategoriesController {
       return res.status(200).json(categories);
     } catch (error) {
       console.log(error);
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Falha na requisição, tente novamente mais tarde',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Falha na requisição, tente novamente mais tarde',
+      });
     }
   }
 
@@ -65,23 +61,19 @@ class CategoriesController {
       const id = req.params?.categoryId;
 
       if (!id)
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: 'É preciso informar o id da categoria',
-          });
+        return res.status(400).json({
+          success: false,
+          message: 'É preciso informar o id da categoria',
+        });
 
       const category = await Model.findById(id);
 
       return res.status(200).json(category);
     } catch (error) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Falha na requisição, tente novamente mais tarde',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Falha na requisição, tente novamente mais tarde',
+      });
     }
   }
 
@@ -107,12 +99,10 @@ class CategoriesController {
       res.status(200).json(category);
     } catch (error) {
       console.log(error);
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Falha na requisição, tente novamente mais tarde',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Falha na requisição, tente novamente mais tarde',
+      });
     }
   }
 
@@ -135,78 +125,40 @@ class CategoriesController {
 
       res.status(200).json(category);
     } catch (error) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Não foi possível editar a categoria',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Não foi possível editar a categoria',
+      });
     }
   }
 
   async update(req, res) {
     try {
       const company = req.headers._id;
-      const { categoryChanges, productChanges } = req.body;
+      const data = req.body;
 
-      console.log(productChanges);
-
-      if(categoryChanges.length) { 
-        await Model.bulkWrite(
-          categoryChanges.map((category) => ({
-            updateOne: {
-              filter: { _id: category.id },
-              upsert: false,
-              update: {
-                $set: {
-                  displayPosition: category.displayPosition,
-                  isActive: category.isActive,
-                },
-              },
-            },
-          }))
+      for (const c of data) {
+        console.log('okkk')
+        await Model.updateOne(
+          { _id: c._id },
+          { $set: { displayPosition: c.displayPosition, isActive: c.isActive } }
         );
+
+        for (const p of c.products) {
+          await ProductsModel.updateOne(
+            { _id: p._id },
+            { $set: { displayPosition: p.displayPosition, isActive: p.isActive } }
+          );
+        }
       }
 
-      if(productChanges.length) { 
-        await ProductsModel.bulkWrite(
-          productChanges.map((product) => ({
-            updateOne: {
-              filter: { _id: product.id, category: product.categoryId },
-              upsert: false,
-              update: {
-                $set: {
-                  displayPosition: product.displayPosition,
-                  isActive: product.isActive,
-                },
-              },
-            },
-          }))
-        );
-      }
-
-      const categories = await Model.aggregate([
-        { $match: { company: mongoose.Types.ObjectId(company) } },
-        {
-          $lookup: {
-            from: 'products',
-            localField: '_id',
-            foreignField: 'category',
-            as: 'products',
-          },
-        },
-        { $sort: { displayPosition: 1 } },
-      ]);
-
-      res.status(200).json(categories);
+      res.status(200).json('result');
     } catch (error) {
       console.log(error);
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Não foi possível editar a categoria',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Não foi possível editar a categoria',
+      });
     }
   }
 
@@ -222,12 +174,10 @@ class CategoriesController {
       return res.status(200).json(categories);
     } catch (error) {
       await LogModel.create({ categoryId, message: error, info: category });
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Ocorreu um erro ao excluir a categoria',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Ocorreu um erro ao excluir a categoria',
+      });
     }
   }
 
@@ -250,12 +200,10 @@ class CategoriesController {
       const _idCompany = req.headers._id;
 
       await LogModel.create({ _idCompany, message: error, info: category });
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Ocorreu um erro ao excluir a categoria',
-        });
+      return res.status(400).json({
+        success: false,
+        message: 'Ocorreu um erro ao excluir a categoria',
+      });
     }
   }
 }
