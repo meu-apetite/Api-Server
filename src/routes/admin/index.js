@@ -30,6 +30,7 @@ router.put('/admin/company/owner', auth, controller.updateInfoAdmin);
 router.get('/admin/company/payments', auth, controller.getPaymentOptions);
 router.put('/admin/company/payments', auth, controller.updatePaymentsMethods);
 router.put('/admin/company/paymentonline/mp', auth, controller.updateCredentialsMercadoPago);
+router.put('/admin/company/settings-delivery', auth, controller.updateSettingsDelivery);
 // router.put('/admin/company/subscription', auth, controller.subscription);
 
 // Category
@@ -59,5 +60,6 @@ router.get('/admin/paymentsmethods', auth, paymentsMethodsController.getAll);
 
 // Complement
 router.post('/admin/complement', auth, complementController.create);
+router.put('/admin/complement', auth, complementController.udpadte);
 
 export default router;

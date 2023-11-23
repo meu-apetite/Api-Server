@@ -12,7 +12,6 @@ import { v2 as cloudinary } from 'cloudinary';
 class CategoriesController {
   async getAll(req, res) {
     try {
-      console.log('categories');
       const company = req.headers._id;
       const categories = await Model.find({ company });
 

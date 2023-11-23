@@ -5,10 +5,9 @@ import axios from 'axios';
 
 class CompanyController {
   async getCompany(req, res) {
- 
-      const companyId = req.headers._id;
-      const company = await Model.findById(companyId);
-      return res.status(200).json(company);
+    const companyId = req.headers._id;
+    const company = await Model.findById(companyId);
+    return res.status(200).json(company);
   }
 
   async getData(req, res) {
@@ -43,7 +42,7 @@ class CompanyController {
       const id = req.headers._id;
       const { phoneNumber, name, email } = req.body;
       const company = await Model.findByIdAndUpdate(
-        id, {$set: { 'owner': { phoneNumber, name, email } }}, { new: true }
+        id, { $set: { 'owner': { phoneNumber, name, email } } }, { new: true }
       );
       return res.status(200).json(company.owner);
     } catch (error) {
@@ -57,7 +56,6 @@ class CompanyController {
       const data = req.body;
 
       const company = await Model.findByIdAndUpdate(id, { $set: data }, { new: true });
-
       return res.status(200).json(company);
     } catch (error) {
       console.log(error);
@@ -97,7 +95,6 @@ class CompanyController {
       const { id } = req.params;
 
       const result = await cloudinary.uploader.destroy(id);
-
       await Model.findByIdAndUpdate(companyId, { $set: { 'custom.logo': null } });
 
       return res.status(200).json({ success: true, message: 'Logo excluída' });
@@ -160,7 +157,6 @@ class CompanyController {
     try {
       /** req: {street: string, number: number, zipCode: string, district: string, city: string} **/
       const companyId = req.headers._id;
-
       const data = req.body;
       const api = 'https://api.tomtom.com/search/2/geocode';
       const key = 'GmL5wOEl3iWP0n1l6O5sBV0XKo6gHwht';
@@ -209,15 +205,15 @@ class CompanyController {
   async getPaymentOptions(req, res) {
     try {
       const companyId = req.headers._id;
-      const credentialsMP = { accessToken: false, publicKey: true};
+      const credentialsMP = { accessToken: false, publicKey: true };
 
       const response = await Model.findById(companyId, 'paymentsMethods paymentOnline');
-      
-      if(response?.paymentOnline?.credentialsMP?.accessToken) {
+
+      if (response?.paymentOnline?.credentialsMP?.accessToken) {
         credentialsMP.accessToken = true;
       }
 
-      if(response?.paymentOnline?.credentialsMP?.publicKey) {
+      if (response?.paymentOnline?.credentialsMP?.publicKey) {
         credentialsMP.publicKey = true;
       }
 
@@ -231,22 +227,8 @@ class CompanyController {
 
   async updatePaymentsMethods(req, res) {
     try {
-      const data = req.body;
       const companyId = req.headers._id;
-      const response = await Model.findByIdAndUpdate(
-        companyId, { paymentsMethods: data }, { new: true }
-      );
-
-      return res.status(200).json(response.paymentsMethods);
-    } catch (error) {
-      return res.status(400).json({ success: false });
-    }
-  }
-
-  async updatePaymentsMethods(req, res) {
-    try {
       const data = req.body;
-      const companyId = req.headers._id;
       const response = await Model.findByIdAndUpdate(
         companyId, { paymentsMethods: data }, { new: true }
       );
@@ -271,42 +253,35 @@ class CompanyController {
         update = { 'paymentOnline.credentialsMP': credentials };
       } else {
         if (credentials?.publicKey?.length > 1) {
-          update = {
-            'paymentOnline.credentialsMP.publicKey': credentials.publicKey
-          };
+          update = { 'paymentOnline.credentialsMP.publicKey': credentials.publicKey };
         };
         if (credentials?.accessToken?.length > 1) {
-          update = {
-            'paymentOnline.credentialsMP.accessToken': credentials.accessToken
-          };
+          update = { 'paymentOnline.credentialsMP.accessToken': credentials.accessToken };
         }
       }
-    
+
       await Model.findByIdAndUpdate(companyId, { $set: update });
-      
-      return res.status(200).json({ 
-        success: true, credentials: { publicKey: true, accessToken: true } 
-      });
+
+      return res.status(200).json({ success: true, credentials: { publicKey: true, accessToken: true } });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       return res.status(400).json({ success: false });
     }
   }
 
-  async subscription(req, res) {
-    console.log(req.body)
-
-    subscription = {
-      endpoint:
-        'https://fcm.googleapis.com/fcm/send/dMtwGLB3r0c:APA91bE_ghXAcdXdQoNeldKUtO9v5O3bX0pD9lumyWx4Q5d6G_7forYsaVZWKsibciXjFFdXMns0Z_1osIyI5KPYJrseYUsg7Ij14evL1zLS4ylHzddPQL0u-b_S79-RjBUWf3Rdcl8J',
-      keys: {
-        p256dh:
-          'BEWE-_Nlv3upfzeUZ-PK3uq5JpPdSZyXHkO8xBWTRHXgduXFl1silPjG7f_QHberIklX1TbtZBO10PK5WS5lySw',
-        auth: 'ydjPabeW0jw8DiaWXUM8Qg',
-      },
-    };
-
-  }
+  async updateSettingsDelivery(req, res) {
+    try {
+      /** req.body: { allowStorePickup, delivery, deliveryOption, minValue, kmValue } **/
+      const companyId = req.headers._id;
+      const data  = req.body;
+      const company = await Model.findOneAndUpdate(
+        { _id: companyId }, { $set: { settingsDelivery: data } }, { new: true }
+      ).exec();
+      return res.status(200).json(company);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 }
 
 export default CompanyController;

@@ -28,16 +28,29 @@ const companySchema = new Schema({
     coordinates: { latitude: Number, longitude: Number },
     freeformAddress: { type: String, trim: true }
   },
-  delivery: { active: Boolean, priceKm: Number },
   custom: {
     logo: { url: String, id: String },
     googleMapUrl: String,
     gallery: [{ url: String, id: String }]
   },
+  subscription: { endpoint: String, keys: { p256dh: String, auth: String } },
   paymentsMethods: [{ id: String, title: String }],
   paymentOnline: { credentialsMP: { publicKey: String, accessToken: String } },
-  subscription: { endpoint: String, keys: { p256dh: String, auth: String } },
-  views: Number
+  settings: {
+
+  },
+  settingsDelivery: {
+    allowStorePickup: { type: Boolean, default: true },
+    delivery: { type: Boolean, default: true },
+    deliveryOption: {
+      type: String,
+      default: 'customerPickup',
+      enum: ['automatic', 'customerPickup', 'fixed'],
+    },
+    minValue: { type: Number, default: 0},
+    kmValue: { type: Number, default: 0},
+    fixedValue: { type: Number, default: 0}
+  }
 }); 
 
 export default mongoose.model('companies', companySchema);

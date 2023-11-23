@@ -47,19 +47,10 @@ const productsSchema = new Schema({
   displayPosition: { type: Number },
 });
 
-productsSchema.pre('save', async function (next) {
-  if (!this.displayPosition) {
-    const maxDisplayPosition = await mongoose
-      .model('products')
-      .findOne()
-      .sort('-displayPosition')
-      .select('displayPosition');
-    this.displayPosition =
-      maxDisplayPosition && maxDisplayPosition.displayPosition
-        ? maxDisplayPosition.displayPosition + 1
-        : 1;
-  }
-  next();
-});
+// productsSchema.pre('save', async function (next) {
+//   const data = this;
+//   console.log(data)
+//   next();
+// });
 
 export default mongoose.model('products', productsSchema);

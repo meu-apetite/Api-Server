@@ -44,7 +44,6 @@ class ProductController {
 
   async create(req, res) {
     upload.array('images')(req, res, async (err) => {
-      console.log(err)
       try {
         const company = req.headers._id;
         let {
@@ -79,26 +78,28 @@ class ProductController {
           uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
         }
 
+        if (!category) {
+          return res.status(400).json({ success: false, message: 'È preciso selecionar a categoria' });
+        }
+
+        const productLast = await Model.findOne({ category })
+          .sort({ createdAt: -1 })
+          .exec();
+          
         const product = await Model.create({
           isActive,
           company,
           name,
           description,
           code,
-          discountPrice,
           category,
           images,
+          discountPrice,
+          displayPosition: (productLast?.displayPosition + 1 || 1),
           price: Number(price),
           complements: JSON.parse(complements)
         });
 
-        // fs.unlink(caminho, (erro) => {
-        //   if (erro) {
-        //     console.error('Erro ao excluir a imagem:', erro);
-        //   } else {
-        //     console.log('Imagem excluída com sucesso!');
-        //   }
-        // });
 
         res.status(200).json(product);
       } catch (error) {
