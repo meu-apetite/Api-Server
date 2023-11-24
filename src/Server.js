@@ -1,14 +1,15 @@
 import express from 'express';
-import session from 'express-session';
-import Database from './config/Database.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import cookieParser from 'cookie-parser';
-import passport from 'passport';
-import logger from 'morgan';
-import indexRouer from './routes/index.js';
-import authRouter from './routes/auth.js';
-import checkSubdomain from './middleware/checkSubdomainMiddleware.js';
+import cors from 'cors';
+import https from 'https';
+import routeAdmin from './routes/admin/index.js';
+import routeAuth from './routes/auth/index.js';
+import routeStore from './routes/store/index.js';
+import fs from 'fs';
+// import privateKey  from './cert/key.pem';
+// import certificate from './cert/cert.pem';
+
+import './settings/cloudinary.js';
+import './settings/database.js';
 
 class Server {
   app = express();
@@ -18,60 +19,23 @@ class Server {
     this.config();
     this.route();
 
-    this.app.listen(this.PORT, () => console.log('server on: localhost:5000'));
+    // const privateKey = fs.readFileSync('./cert/key.pem');
+    // const certificate = fs.readFileSync('./cert/cert.pem');
+
+    // https.createServer({ key: privateKey, cert: certificate}, this.app).listen(this.PORT);
+
+    this.app.listen(this.PORT, () => console.log('http://localhost:5000'));
   }
 
   config() {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-
-    this.app.use(express.urlencoded({ extended: false }));
-    this.app.use(logger('dev'));
-    this.app.use(cookieParser());
-
-    //esj
-    this.app.set('views', path.join(__dirname, 'views'));
-    this.app.set('view engine', 'ejs');
-    this.app.use(express.static(__dirname));
-
-    //database
-    const dataBase = new Database();
-    dataBase.connect();
+    this.app.use(express.json({ extended: false }));
+    this.app.use(cors());
   }
 
   route() {
-    this.app.get('/favicon.ico', (req, res) => res.status(204));
-
-    this.app.use(
-      session({
-        secret: '123',
-        cookie: { _expires: 60000 * 40, maxAge: 60000 * 40 },
-        resave: false,
-        saveUninitialized: false,
-      })
-    );
-
-    this.app.use(passport.authenticate('session'));
-    this.app.use(function (req, res, next) {
-      var msgs = req.session.messages || [];
-      res.locals.messages = msgs;
-      res.locals.hasMessages = !!msgs.length;
-      req.session.messages = [];
-      next();
-    });
-
-    this.app.use('/', authRouter);
-    this.app.use(indexRouer);
-
-    this.app.use((req, res, next) => next(createError(404)));
-
-    this.app.use(function (err, req, res, next) {
-      res.locals.message = err.message;
-      res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-      res.status(err.status || 500);
-      res.render('erro');
-    });
+    this.app.use(routeAuth);
+    this.app.use(routeStore);
+    this.app.use(routeAdmin);
   }
 }
 
