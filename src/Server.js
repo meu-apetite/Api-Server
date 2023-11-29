@@ -1,32 +1,34 @@
+import './settings/cloudinary.js';
+import './settings/database.js';
 import express from 'express';
 import cors from 'cors';
 import https from 'https';
 import routeAdmin from './routes/admin/index.js';
 import routeAuth from './routes/auth/index.js';
 import routeStore from './routes/store/index.js';
-import fs from 'fs';
-// import privateKey  from './cert/key.pem';
-// import certificate from './cert/cert.pem';
-
-import './settings/cloudinary.js';
-import './settings/database.js';
 
 class Server {
   app = express();
   PORT = 5000;
 
-  start() {
+ start() {
     this.config();
     this.route();
 
-    // const privateKey = fs.readFileSync('./cert/key.pem');
-    // const certificate = fs.readFileSync('./cert/cert.pem');
+    // Configurando SSL com certificado do Let's Encrypt
+    const credentials = {
+      key: fs.readFileSync('/etc/letsencrypt/archive/meuapetite.com/privkey1.pem', 'utf8'),
+      cert: fs.readFileSync('/etc/letsencrypt/archive/meuapetite.com/cert1.pem', 'utf8'),
+      ca: fs.readFileSync('/etc/letsencrypt/archive/meuapetite.com/chain1.pem', 'utf8'),
+    };
 
-    // https.createServer({ key: privateKey, cert: certificate}, this.app).listen(this.PORT);
+    // Criando e iniciando o servidor HTTPS
+    const servidorHttps = https.createServer(credentials, this.app);
 
-    this.app.listen(this.PORT, () => console.log('http://localhost:5000'));
+    servidorHttps.listen(this.PORT, () => {
+      console.log(`Servidor HTTPS está ouvindo na porta ${this.PORT}`);
+    });
   }
-
   config() {
     this.app.use(express.json({ extended: false }));
     this.app.use(cors());
