@@ -6,6 +6,7 @@ import https from 'https';
 import routeAdmin from './routes/admin/index.js';
 import routeAuth from './routes/auth/index.js';
 import routeStore from './routes/store/index.js';
+import fs from 'fs';
 
 class Server {
   app = express();
