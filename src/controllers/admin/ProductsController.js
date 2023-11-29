@@ -45,6 +45,7 @@ class ProductController {
   async create(req, res) {
     upload.array('images')(req, res, async (err) => {
       try {
+        console.log(err)
         const company = req.headers._id;
         let {
           name,
