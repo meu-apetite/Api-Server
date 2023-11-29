@@ -4,13 +4,10 @@ import OrdersModel from '../models/OrdersModel.js';
 import jwt from 'jsonwebtoken';
 import mercadopago from 'mercadopago';
 import axios from 'axios';
-import listPaymentMethod from '../utils/listPaymentMethod.js';
 import { NotificationService } from '../services/NotificationService.js';
 import { EmailService } from '../services/EmailService.js';
 import { TomtomService } from '../services/TomtomService.js';
 import { json } from 'express';
-
-
 
 class StoreController {
   async getAllProduct(req, res) {
@@ -162,7 +159,7 @@ class StoreController {
         const addressClient = { 
           ...addressData, 
           deliveryOption: 'fixed', 
-          price: company.settingsDelivery.valueFixed 
+          price: company.settingsDelivery.fixedValue 
         };
         const addressToken = jwt.sign(addressClient, process.env.TOKEN_KEY, { expiresIn: '120 days' });
         return res.status(200).json({ address: addressClient, addressToken });
@@ -199,18 +196,20 @@ class StoreController {
     }
   };
 
+  async paymentConfirmation(req, res) {
+    try {
+      console.log(req)
+    } catch (error) {
+      console.error('erroo ', error);
+    }
+  }
+
   async getPreferenceIdMp(products) {
     try {
-      console.log(products);
-      mercadopago.configure({
-        access_token:
-          'TEST-1944498221096339-010600-f3917d8d9a0242baa5b2236a9d4ac87e-225270724',
-      });
+      mercadopago.configure({ access_token: 'TEST-1944498221096339-010600-f3917d8d9a0242baa5b2236a9d4ac87e-225270724' });
       const preference = {
-        items: products?.map((item) => ({
-          title: item.name,
-          unit_price: item.total,
-          quantity: item.quantity,
+        items: products.map((item) => ({
+          title: item.name, unit_price: item.priceTotal, quantity: item.quantity,
         })),
       };
       const response = await mercadopago.preferences.create(preference);
@@ -223,21 +222,15 @@ class StoreController {
   getPaymentOptions = async (req, res) => {
     try {
       const { companyId } = req.params;
-      const { products } = req.body;
+      const { productsToken } = req.body;
 
-      const preferenceId = await this.getPreferenceIdMp(products);
-      const response = await CompanyModel.findById(companyId, 'paymentsMethods paymentOnline');
+      const preferenceId = await this.getPreferenceIdMp(jwt.decode(productsToken).products);
+      const company = await CompanyModel.findById(companyId, 'settingsPayment');
 
       return res.status(200).json({
-        activeItems: response.paymentsMethods,
-        paymentOnline: {
-          ...response.paymentOnline,
-          credentialsMP: {
-            ...response.paymentOnline.credentialsMP,
-            preferenceId,
-          },
-        },
-        listPaymentMethod,
+        preferenceId,
+        mercadoPago: company.settingsPayment.mercadoPago,
+        methods: company.settingsPayment.methods
       });
     } catch (error) {
       return res.status(400).json({ success: false });
@@ -262,14 +255,8 @@ class StoreController {
         status: 'awaiting-approval',
       });
 
-      const store = await CompanyModel.findById(companyId).select(
-        'fantasyName custom address subscription'
-      );
-
-      const notificationService = new NotificationService(
-        store.subscription.endpoint,
-        store.subscription.keys
-      );
+      const company = await CompanyModel.findById(companyId).select('fantasyName custom address subscription');
+      const notificationService = new NotificationService(company.subscription.endpoint, company.subscription.keys);
 
       await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
 

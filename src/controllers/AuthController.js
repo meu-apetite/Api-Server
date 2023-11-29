@@ -19,41 +19,27 @@ class Auth {
       });
 
       if (messages.length) {
-        res.status(400).json({
+        return res.status(400).json({
           success: false, message: `${messages.join(", ")}`
         });
-        return;
+      }
+
+      const existingUser = await Model.findOne({ email: data.email });
+
+      if (existingUser) {
+        return res.status(400).json({ success: false, message: 'Email já cadastrado' });
       }
 
       await Model.create({
         fantasyName: data.fantasyName,
-        whatsapp: data.whatsapp,
+        urlName: data.urlName,
         owner: { name: data.ownerName },
-        login: {
-          email: data.email,
-          password: bcrypt.hashSync(data.password, 12)
-        },
-        paymentsMethods: [
-          { id: 'dinheiro', title: 'Dinehiro' },
-          { id: 'pix', title: 'Pix' },
-          { id: 'mastercard-debito', title: 'Mastercard' },
-          { id: 'visa-debito', title: 'Visa' },
-          { id: 'elo-debito', title: 'Elo' },
-          { id: 'hipercard-debito', title: 'Hipercard' },
-          { id: 'hipercard-credito', title: 'Hipercard' },
-          { id: 'visa-credito', title: 'Visa' },
-          { id: 'nugo-credito', title: 'Nugo' },
-          { id: 'mastercard-credito', title: 'Mastercard' },
-          { id: 'elo-credito', title: 'Elo' },
-          { id: 'amex-credito', title: 'Amex' },
-          { id: 'vr-refeicao', title: 'VR Refeição' },
-          { id: 'sodexo-refeicao', title: 'Sodexo Refeição' },
-          { id: 'ticket-refeicao', title: 'Ticket' },
-        ]
+        email: data.email,
+        password: bcrypt.hashSync(data.password, 12)
       });
 
       return res.status(200).json({ 
-        success: true, message: 'Cadastro feito com sucesso!'
+        success: true, message: 'Cadastro feito com sucesso!' 
       });
     } catch (error) {
       console.log(error);
@@ -75,13 +61,12 @@ class Auth {
         });
       }
 
-      const company = await Model
-        .findOne({ 'login.email': data.email })
-        .select('name login');
+      const company = await Model.findOne({ 'email': data.email })
+        .select('name email password');
 
       if (
         !company || 
-        !bcrypt.compareSync(data.password, company.login.password)
+        !bcrypt.compareSync(data.password, company.password)
       ) {
         return res.status(401).json({ 
           success: false, message: 'Senha ou email incorreto!' 
@@ -93,7 +78,7 @@ class Auth {
       await Model.findByIdAndUpdate(company._id, { subscription: data.subscription });
 
       const token = jwt.sign(
-        { id: company._id, email: company.login.email },
+        { id: company._id, email: company.email },
         process.env.TOKEN_KEY,
         { expiresIn: '2h' }
       );

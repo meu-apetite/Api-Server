@@ -1,21 +1,20 @@
 import mongoose from 'mongoose';
+import { allMethods } from '../utils/fetchPaymentMethods.js';
 const { Schema } = mongoose;
 
 const companySchema = new Schema({
   urlName: { type: String },
-  fantasyName: { type: String, required: true },
+  fantasyName: { type: String, required: true }, 
   slogan: String,
   description: String,
   whatsapp: String,
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   active: { type: Boolean, default: true },
   owner: {
     name: { type: String, required: true },
     phoneNumber: { type: String },
     email: { type: String },
-  },
-  login: {
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
   },
   address: {
     state: { type: String, trim: true },
@@ -29,15 +28,31 @@ const companySchema = new Schema({
     freeformAddress: { type: String, trim: true }
   },
   custom: {
+    colors: { 
+      primary: { type: String, default: '' }, 
+      secundary: { type: String, default: '' } 
+    },
     logo: { url: String, id: String },
-    googleMapUrl: String,
     gallery: [{ url: String, id: String }]
   },
   subscription: { endpoint: String, keys: { p256dh: String, auth: String } },
-  paymentsMethods: [{ id: String, title: String }],
-  paymentOnline: { credentialsMP: { publicKey: String, accessToken: String } },
   settings: {
-
+    openingHours: {
+      monday: { type: String },
+      tuesday: { type: String },
+      wednesday: { type: String },
+      thursday: { type: String },
+      friday: { type: String },
+      saturday: { type: String },
+      sunday: { type: String },
+    },
+  },
+  settingsPayment: {
+    methods: {
+      type: [{ id: String, title: String }], 
+      default: allMethods
+    },
+    mercadoPago: { active: Boolean, publicKey: String, accessToken: String },
   },
   settingsDelivery: {
     allowStorePickup: { type: Boolean, default: true },

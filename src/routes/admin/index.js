@@ -5,14 +5,14 @@ import ProductsController from '../../controllers/admin/ProductsController.js';
 import CategoriesController from '../../controllers/admin/CategoriesController.js';
 import ComplementController from '../../controllers/admin/ComplementController.js';
 import OrdersController from '../../controllers/admin/OrdersController.js';
-import PaymentsMethodsController from '../../controllers/admin/PaymentsMethodController.js';
+import PaymentsController from '../../controllers/admin/PaymentsController.js';
 
 const controller = new CompanyController();
 const categoriesController = new CategoriesController();
 const productsController = new ProductsController();
 const complementController = new ComplementController();
 const ordersController = new OrdersController();
-const paymentsMethodsController = new PaymentsMethodsController();
+const paymentsController = new PaymentsController();
 
 const router = Router();
 
@@ -27,9 +27,6 @@ router.get('/admin/company/address', auth, controller.getAddress);
 router.put('/admin/company/address', auth, controller.updateAddress);
 router.get('/admin/company/owner', auth, controller.getInfoAdmin);
 router.put('/admin/company/owner', auth, controller.updateInfoAdmin);
-router.get('/admin/company/payments', auth, controller.getPaymentOptions);
-router.put('/admin/company/payments', auth, controller.updatePaymentsMethods);
-router.put('/admin/company/paymentonline/mp', auth, controller.updateCredentialsMercadoPago);
 router.put('/admin/company/settings-delivery', auth, controller.updateSettingsDelivery);
 // router.put('/admin/company/subscription', auth, controller.subscription);
 
@@ -55,8 +52,11 @@ router.post('/admin/products/updateImage/productId/:productId', auth, productsCo
 // Orders
 router.get('/admin/orders', auth, ordersController.getAll);
 
-// Payment methods
-router.get('/admin/paymentsmethods', auth, paymentsMethodsController.getAll);
+//Payment
+router.get('/admin/all-method-in-category', auth, paymentsController.getMethodInCategory);
+router.get('/admin/payments', auth, paymentsController.getPaymentOptions);
+router.put('/admin/payments', auth, paymentsController.updatePaymentsMethods);
+router.put('/admin/paymentonline/mp', auth, paymentsController.updateCredentialsMercadoPago);
 
 // Complement
 router.post('/admin/complement', auth, complementController.create);
