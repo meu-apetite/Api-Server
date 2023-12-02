@@ -32,7 +32,7 @@ class Auth {
 
       await Model.create({
         fantasyName: data.fantasyName,
-        urlName: data.urlName,
+        storeUrl: data.storeUrl,
         owner: { name: data.ownerName },
         email: data.email,
         password: bcrypt.hashSync(data.password, 12)

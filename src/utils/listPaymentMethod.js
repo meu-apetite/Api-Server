@@ -1,38 +1,17 @@
 export default [
-  {
-    titleCategory: 'Dinheiro',
-    methods: [{ id: 'dinheiro', title: 'Dinehiro' }],
-  },
-  {
-    titleCategory: 'Pix',
-    methods: [{ id: 'pix', title: 'Pix' }],
-  },
-  {
-    titleCategory: 'Débito',
-    methods: [
-      { id: 'mastercard-debito', title: 'Mastercard' },
-      { id: 'visa-debito', title: 'Visa' },
-      { id: 'elo-debito', title: 'Elo' },
-      { id: 'hipercard-debito', title: 'Hipercard' },
-    ],
-  },
-  {
-    titleCategory: 'Crédito',
-    methods: [
-      { id: 'hipercard-credito', title: 'Hipercard' },
-      { id: 'visa-credito', title: 'Visa' },
-      { id: 'nugo-credito', title: 'Nugo' },
-      { id: 'mastercard-credito', title: 'Mastercard' },
-      { id: 'elo-credito', title: 'Elo' },
-      { id: 'amex-credito', title: 'Amex' },
-    ],
-  },
-  {
-    titleCategory: 'Vale-refeição',
-    methods: [
-      { id: 'vr-refeicao', title: 'VR Refeição' },
-      { id: 'sodexo-refeicao', title: 'Sodexo Refeição' },
-      { id: 'ticket-refeicao', title: 'Ticket' },
-    ],
-  },
+  { id: 'dinheiro', title: 'Dinehiro', parent: 'Dinheiro' },
+  { id: 'pix', title: 'Pix', parent: 'Pix' },
+  { id: 'mastercard-debito', title: 'Mastercard', parent: 'Débito' },
+  { id: 'visa-debito', title: 'Visa', parent: 'Débito' },
+  { id: 'elo-debito', title: 'Elo', parent: 'Débito' },
+  { id: 'hipercard-debito', title: 'Hipercard', parent: 'Débito' },
+  { id: 'hipercard-credito', title: 'Hipercard', parent: 'Crédito' },
+  { id: 'visa-credito', title: 'Visa', parent: 'Crédito' },
+  { id: 'nugo-credito', title: 'Nugo', parent: 'Crédito' },
+  { id: 'mastercard-credito', title: 'Mastercard', parent: 'Crédito' },
+  { id: 'elo-credito', title: 'Elo', parent: 'Crédito' },
+  { id: 'amex-credito', title: 'Amex', parent: 'Crédito' },
+  { id: 'vr-refeicao', title: 'VR Refeição', parent: 'Vale-refeição' },
+  { id: 'sodexo-refeicao', title: 'Sodexo Refeição', parent: 'Vale-refeição' },
+  { id: 'ticket-refeicao', title: 'Ticket', parent: 'Vale-refeição' },
 ];

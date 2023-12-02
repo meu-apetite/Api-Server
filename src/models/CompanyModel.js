@@ -3,7 +3,7 @@ import { allMethods } from '../utils/fetchPaymentMethods.js';
 const { Schema } = mongoose;
 
 const companySchema = new Schema({
-  urlName: { type: String },
+  storeUrl: { type: String, required: true },
   fantasyName: { type: String, required: true }, 
   slogan: String,
   description: String,
@@ -49,7 +49,7 @@ const companySchema = new Schema({
   },
   settingsPayment: {
     methods: {
-      type: [{ id: String, title: String }], 
+      type: [{ id: String, title: String, parent: String }], 
       default: allMethods
     },
     mercadoPago: { active: Boolean, publicKey: String, accessToken: String },

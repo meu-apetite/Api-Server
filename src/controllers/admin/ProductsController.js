@@ -71,6 +71,10 @@ class ProductController {
           return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
 
+        if (req.files.length <= 0 ) {
+          return res.status(400).json({ success: false, message: 'É preciso enviar a foto do ptoduto' });
+        }
+
         if (req.files.length) {
           const uploadPromises = req.files.map(file => {
             return cloudinary.uploader.upload(file.path, { folder: company });
@@ -80,7 +84,7 @@ class ProductController {
         }
 
         if (!category) {
-          return res.status(400).json({ success: false, message: 'È preciso selecionar a categoria' });
+          return res.status(400).json({ success: false, message: 'É preciso selecionar a categoria' });
         }
 
         const productLast = await Model.findOne({ category })

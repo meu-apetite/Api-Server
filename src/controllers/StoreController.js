@@ -12,13 +12,15 @@ import { json } from 'express';
 class StoreController {
   async getAllProduct(req, res) {
     try {
-      const companyId = req.params?.companyId;
-
-      const products = await ProductModel.find({ company: companyId })
-        .populate('category', 'title')
-        .populate({ path: 'complements' })
-        .select('-isActive -company -code')
-        .exec();
+      const storeUrl = req.params?.storeUrl;
+      const company = await CompanyModel.findOne({ storeUrl });
+      if (company) {
+        const products = await ProductModel.find({ company: company._id })
+          .populate('category', 'title')
+          .populate({ path: 'complements' })
+          .select('-isActive -company -code')
+          .exec();
+      }
 
       return res.status(200).json(products);
     } catch (error) {
@@ -28,8 +30,8 @@ class StoreController {
 
   async getStore(req, res) {
     try {
-      const companyId = req.params?.companyId;
-      const store = await CompanyModel.findById(companyId).select(
+      const storeUrl = req.params?.storeUrl;
+      const store = await CompanyModel.find({ storeUrl }).select(
         'fantasyName custom address subscription settingsDelivery'
       );
 
@@ -41,9 +43,9 @@ class StoreController {
 
   async getStoreView(req, res) {
     try {
-      const companyId = req.params?.companyId;
+      const storeUrl = req.params?.storeUrl;
       const store = await CompanyModel.findByIdAndUpdate(
-        companyId,
+        storeUrl,
         { $inc: { views: 1 } },
         { new: true }
       ).select('fantasyName custom address subscription');
@@ -221,6 +223,7 @@ class StoreController {
 
   getPaymentOptions = async (req, res) => {
     try {
+      console.log(req.body)
       const { companyId } = req.params;
       const { productsToken } = req.body;
 
@@ -242,8 +245,14 @@ class StoreController {
     try {
       const { companyId } = req.params;
       const { productsToken, addressToken, deliveryType, paymentType, email, name, phoneNumber } = req.body;
-      const products = jwt.decode(productsToken).products;
+      const { products, total } = jwt.decode(productsToken);
       const address = jwt.decode(addressToken);
+
+      if (!productsToken) {
+        return res.status(400).json({ 
+          success: false, message: 'É necessário passar o token dos produtos' 
+        });
+      }
 
       const order = await OrdersModel.create({
         company: companyId,
@@ -251,30 +260,33 @@ class StoreController {
         products,
         address,
         paymentType,
+        total,
         client: { email, name, phoneNumber },
         status: 'awaiting-approval',
       });
 
-      const company = await CompanyModel.findById(companyId).select('fantasyName custom address subscription');
-      const notificationService = new NotificationService(company.subscription.endpoint, company.subscription.keys);
+      const company = await CompanyModel.findById(companyId)
+        .select('fantasyName custom address subscription');
 
-      await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
-
+      if(company.subscription.endpoint) {
+        const notificationService = new NotificationService(company.subscription.endpoint, company.subscription.keys);
+        await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
+      }
+      
       //store email
-      await new EmailService().send({
-        to: 'gneris.gs@gmail.com',
-        subject: 'Novo pedido!',
-        text: 'Você tem um novo pedido',
-      });
+      await new EmailService().sendEmailOrder(
+        { to: 'gneris177@gmail.com', subject: 'Novo pedido!' }, 
+        order
+      );
 
       //client email
-      await new EmailService().send({
-        to: email.trim(),
-        subject: 'Pedido recibo!',
-        text: `Olá ${name.trim()}, obrigado por ter comprado conosco, seu pedido está em preparo`,
-      });
+      // await new EmailService().send({
+      //   to: email.trim(),
+      //   subject: 'Pedido recibo!',
+      //   text: `Olá ${name.trim()}, obrigado por ter comprado conosco, seu pedido está em preparo`,
+      // });
 
-      return res.json({ order, store });
+      return res.json({ order, company });
     } catch (error) {
       console.log('erroo ', error);
     }

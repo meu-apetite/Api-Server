@@ -39,13 +39,21 @@ class PaymentsController {
     try {
       const companyId = req.headers._id;
       const data = req.body;
+
+      if (data.length < 1) {
+        return res.status(200).json({ 
+          success: false, 
+          message: 'Não é permitido desativar todas as formas de pagamentos' 
+        });
+      }
+
       const response = await Model.findByIdAndUpdate(
         companyId,   
         { $set: { 'settingsPayment.methods': data } },
         { new: true }
       );
 
-      return res.status(200).json(response.settingsPayment.methods  );
+      return res.status(200).json(response.settingsPayment.methods);
     } catch (error) {
       console.log(error)
       return res.status(400).json({ success: false });
