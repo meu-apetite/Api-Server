@@ -7,7 +7,7 @@ class ProductController {
   async getAll(req, res) {
     const company = req.headers._id;
     const page = parseInt(req.query.page) || 1;
-    const perPage = 10; 
+    const perPage = 10;
 
     try {
       const totalProducts = await Model.countDocuments({ company });
@@ -33,8 +33,8 @@ class ProductController {
 
       const product = await Model.findById(id)
         .populate({ path: 'complements' })
-        .populate({ path: 'category', select: 'title' })
-    
+        .populate({ path: 'category', select: 'title' });
+
       return res.status(200).json(product);
     } catch (error) {
       console.log(error);
@@ -45,7 +45,7 @@ class ProductController {
   async create(req, res) {
     upload.array('images')(req, res, async (err) => {
       try {
-        console.log(err)
+        console.log(err);
         const company = req.headers._id;
         let {
           name,
@@ -71,7 +71,7 @@ class ProductController {
           return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
 
-        if (req.files.length <= 0 ) {
+        if (req.files.length <= 0) {
           return res.status(400).json({ success: false, message: 'É preciso enviar a foto do ptoduto' });
         }
 
@@ -90,7 +90,7 @@ class ProductController {
         const productLast = await Model.findOne({ category })
           .sort({ createdAt: -1 })
           .exec();
-          
+
         const product = await Model.create({
           isActive,
           company,
@@ -128,18 +128,30 @@ class ProductController {
 
   async delete(req, res) {
     try {
-      console.log('aqui');
-      const product = await Model.findById(req.params.productId);
-      res.render('admin/product/update', { product });
+      const { productId, companyId } = req.params;
+
+      if (!productId) {
+        return res.status(400).json({ success: false, message: 'Produto não encontrado' });
+      }
+
+      const product = await Model.findByIdAndDelete(productId, { new: true });
+
+      if (product.images.length >= 1) {
+        product.images.map(async (img) => await cloudinary.uploader.destroy(img.id));
+      }
+
+      const products = await Model.find({ company: companyId });
+
+      return res.status(200).json(products);
     } catch (error) {
       console.log(error);
+      return res.status(400).json({ success: false, message: 'Erro ao produto' });
     }
   }
 
   async deleteMultiple(req, res) {
-    let product;
-
     try {
+      let product;
       const { productIds } = req.body;
 
       productIds.forEach(async (id) => {

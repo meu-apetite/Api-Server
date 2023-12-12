@@ -33,6 +33,10 @@ const ordersSchema = new Schema({
     enum: ['online', 'indelivery'],
     required: true
   },
+  paymentMethod: {
+    type: { icon: String, id: String, title: String, _id: String },
+    required: true
+  },
   deliveryType: {
     type: String,
     enum: ['pickup', 'delivery'],

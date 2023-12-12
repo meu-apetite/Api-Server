@@ -11,7 +11,7 @@ const authenticationMiddleware = (req, res, next) => {
       jwt.verify(token, process.env.TOKEN_KEY);
       next();
     } catch (err) {
-      return res.status(401).json({  success: false, message: 'Token inválido' });
+      return res.status(401).json({ success: false, message: 'Token inválido' });
     }
   } else {
     return res.status(401).json({ success: false, message: 'Token não fornecido' });

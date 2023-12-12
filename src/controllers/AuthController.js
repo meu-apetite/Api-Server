@@ -12,6 +12,8 @@ class Auth {
       const data = { ...req.body };
       const messages = [];
 
+      console.log(data)
+
       Object.keys(data).forEach((item) => {
         if (!checkValidation[item]) return;
         const validation = checkValidation[item](data[item]);
@@ -34,6 +36,7 @@ class Auth {
         fantasyName: data.fantasyName,
         storeUrl: data.storeUrl,
         owner: { name: data.ownerName },
+        description: data.description,
         email: data.email,
         password: bcrypt.hashSync(data.password, 12)
       });

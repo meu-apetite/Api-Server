@@ -14,13 +14,14 @@ class StoreController {
     try {
       const storeUrl = req.params?.storeUrl;
       const company = await CompanyModel.findOne({ storeUrl });
-      if (company) {
-        const products = await ProductModel.find({ company: company._id })
-          .populate('category', 'title')
-          .populate({ path: 'complements' })
-          .select('-isActive -company -code')
-          .exec();
-      }
+
+      if (!company) return res.status(400).json({ success: false, message: 'Loja não encontrada' });
+
+      const products = await ProductModel.find({ company: company._id })
+        .populate('category', 'title')
+        .populate({ path: 'complements' })
+        .select('-isActive -company -code')
+        .exec();
 
       return res.status(200).json(products);
     } catch (error) {
@@ -31,8 +32,8 @@ class StoreController {
   async getStore(req, res) {
     try {
       const storeUrl = req.params?.storeUrl;
-      const store = await CompanyModel.find({ storeUrl }).select(
-        'fantasyName custom address subscription settingsDelivery'
+      const store = await CompanyModel.findOne({ storeUrl }).select(
+        'fantasyName description settings settingsPayment custom address subscription settingsDelivery storeUrl'
       );
 
       return res.status(200).json(store);
@@ -48,7 +49,7 @@ class StoreController {
         storeUrl,
         { $inc: { views: 1 } },
         { new: true }
-      ).select('fantasyName custom address subscription');
+      ).select('fantasyName custom address subscription storeUrl');
       return res.status(200).json(store);
     } catch (error) {
       console.error(error);
@@ -126,8 +127,6 @@ class StoreController {
 
   estimateValue = async (req, res) => {
     try {
-      // console.log(req.body)
-      // return
       const listProduct = [...req.body];
       const result = await this.estimateValueFromData(listProduct);
       const productsToken = jwt.sign(result, process.env.TOKEN_KEY, {
@@ -168,6 +167,24 @@ class StoreController {
       }
 
       if (company.settingsDelivery.deliveryOption === 'automatic') {
+        if (!addressData?.zipCode) {
+          if (!addressData?.street) {
+            return res.status(400).json({ success: false, message: 'Rua não informada' });
+          } 
+          if (!addressData?.district) {
+            return res.status(400).json({ success: false, message: 'Bairro não informado' });
+          } 
+          if (!addressData?.city) {
+            return res.status(400).json({ success: false, message: 'Cidade não informada' });
+          } 
+          if (!addressData?.number) {
+            return res.status(400).json({ success: false, message: 'Número da casa não informado' });
+          } 
+          const address = { ...addressData, problem: 'A taxa não foi calculada automáticamente' }
+          const addressToken = jwt.sign(addressData, process.env.TOKEN_KEY, { expiresIn: '120 days' });
+          return res.status(200).json({ address: addressData, addressToken });
+        }
+
         const tomtomService = new TomtomService();
         const findAddress = await tomtomService.findAddress({ ...addressData });
         const address = findAddress[0];
@@ -180,9 +197,10 @@ class StoreController {
         const calculateDistance = await tomtomService.getDistance(...positions);
         const distanceInKm = calculateDistance.routes[0].summary.lengthInMeters / 1000;
         const addressClient = {
+          zipCode: address.address.extendedPostalCode,
           position: { latitude: address.position.lat, longitude: address.position.lon },
           distance: distanceInKm,
-          price: distanceInKm * company.settingsDelivery.kmValue,
+          price: (distanceInKm * company.settingsDelivery.kmValue) + company.settingsDelivery.minValue,
           number: address.address.streetNumber,
           street: address.address.streetName,
           district: address.address.municipalitySubdivision,
@@ -224,8 +242,7 @@ class StoreController {
   getPaymentOptions = async (req, res) => {
     try {
       console.log(req.body)
-      const { companyId } = req.params;
-      const { productsToken } = req.body;
+      const { companyId, productsToken } = req.body;
 
       const preferenceId = await this.getPreferenceIdMp(jwt.decode(productsToken).products);
       const company = await CompanyModel.findById(companyId, 'settingsPayment');
@@ -243,8 +260,17 @@ class StoreController {
   async finishOrder(req, res) {
     //deliveryType: 'pickup', paymentMethod: 'dinheiro', paymentType: 'inDelivery', products: [{}]
     try {
-      const { companyId } = req.params;
-      const { productsToken, addressToken, deliveryType, paymentType, email, name, phoneNumber } = req.body;
+      const { 
+        companyId,
+        productsToken, 
+        addressToken, 
+        deliveryType, 
+        paymentType, 
+        paymentMethod, 
+        email, 
+        name, 
+        phoneNumber 
+      } = req.body;
       const { products, total } = jwt.decode(productsToken);
       const address = jwt.decode(addressToken);
 
@@ -254,21 +280,28 @@ class StoreController {
         });
       }
 
+      if (!paymentMethod) {
+        return res.status(400).json({ 
+          success: false, message: 'Método de pagamento não informado' 
+        });
+      }
+
       const order = await OrdersModel.create({
         company: companyId,
         deliveryType,
         products,
         address,
         paymentType,
+        paymentMethod, 
         total,
         client: { email, name, phoneNumber },
         status: 'awaiting-approval',
       });
 
       const company = await CompanyModel.findById(companyId)
-        .select('fantasyName custom address subscription');
+        .select('fantasyName custom address subscription storeUrl');
 
-      if(company.subscription.endpoint) {
+      if(company?.subscription.endpoint) {
         const notificationService = new NotificationService(company.subscription.endpoint, company.subscription.keys);
         await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
       }
@@ -279,7 +312,11 @@ class StoreController {
         order
       );
 
-      //client email
+      // client email
+      await new EmailService().sendEmailOrder(
+        { to: email.trim(), subject: 'Novo pedido!' }, 
+        order
+      );
       // await new EmailService().send({
       //   to: email.trim(),
       //   subject: 'Pedido recibo!',
@@ -289,6 +326,33 @@ class StoreController {
       return res.json({ order, company });
     } catch (error) {
       console.log('erroo ', error);
+    }
+  }
+
+  async getOrder(req, res) {
+    try {
+      const { storeUrl, orderId } = req.params;
+      const company = await CompanyModel.findOne({ storeUrl })
+        .select('fantasyName custom address subscription storeUrl');
+
+      if (!company._id) {
+        return res.status(400).json({ 
+          success: false, message: 'Não foi possível encontrar a loja' 
+        });
+      }
+
+      const order = await OrdersModel.findOne({ id: orderId, company: company._id });
+
+      if (!order._id) {
+        return res.status(400).json({ 
+          success: false, message: 'Não foi possível encontrar o pedido' 
+        });
+      }
+
+      return res.status(200).json({ order, company });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
 }

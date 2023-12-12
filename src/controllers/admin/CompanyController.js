@@ -215,6 +215,20 @@ class CompanyController {
       console.error(error);
     }
   };
+
+  async updateOpeningHours(req, res) {
+    try {
+      const companyId = req.headers._id;
+      const company = await Model.findOneAndUpdate(
+        { _id: companyId },
+        { $set: { 'settings.openingHours': req.body } },
+        { new: true, select: 'settings.openingHours' }
+      )
+      return res.status(200).json(company.settings.openingHours);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 }
 
 export default CompanyController;

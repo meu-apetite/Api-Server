@@ -2,7 +2,6 @@ import Model from '../../models/CategoriesModel.js';
 import ProductsModel from '../../models/ProductsModel.js';
 import LogModel from '../../models/LogModel.js';
 import mongoose from 'mongoose';
-import { v2 as cloudinary } from 'cloudinary';
 
 /**
  * Interface
@@ -27,11 +26,8 @@ class CategoriesController {
   async listCategoriesWithProducts(req, res) {
     try {
       const company = req.headers._id;
-
       const categories = await Model.aggregate([
-        {
-          $match: { company: mongoose.Types.ObjectId(company) },
-        },
+        { $match: { company: mongoose.Types.ObjectId(company) } },
         {
           $lookup: {
             from: 'products',
@@ -40,9 +36,7 @@ class CategoriesController {
             as: 'products',
           },
         },
-        {
-          $sort: { displayPosition: 1 },
-        },
+        { $sort: { displayPosition: 1 } },
       ]);
 
       return res.status(200).json(categories);
@@ -97,7 +91,6 @@ class CategoriesController {
 
       res.status(200).json(category);
     } catch (error) {
-      console.log(error);
       return res.status(400).json({
         success: false,
         message: 'Falha na requisição, tente novamente mais tarde',
@@ -137,7 +130,6 @@ class CategoriesController {
       const data = req.body;
 
       for (const c of data) {
-        console.log('okkk')
         await Model.updateOne(
           { _id: c._id },
           { $set: { displayPosition: c.displayPosition, isActive: c.isActive } }
@@ -153,7 +145,6 @@ class CategoriesController {
 
       res.status(200).json('result');
     } catch (error) {
-      console.log(error);
       return res.status(400).json({
         success: false,
         message: 'Não foi possível editar a categoria',
@@ -162,43 +153,24 @@ class CategoriesController {
   }
 
   async delete(req, res) {
-    const { categoryId } = req.params;
-
     try {
-      let category;
-      category = await Model.findByIdAndDelete(categoryId);
-
-      const categories = await Model.find();
-
+      const company = req.headers._id;
+      const { categoryId } = req.params;
+      await Model.deleteOne({ _id: categoryId, company });
+      const categories = await Model.aggregate([
+        { $match: { company: mongoose.Types.ObjectId(company) } },
+        {
+          $lookup: {
+            from: 'products',
+            localField: '_id',
+            foreignField: 'category',
+            as: 'products',
+          },
+        },
+      ]);
       return res.status(200).json(categories);
     } catch (error) {
       await LogModel.create({ categoryId, message: error, info: category });
-      return res.status(400).json({
-        success: false,
-        message: 'Ocorreu um erro ao excluir a categoria',
-      });
-    }
-  }
-
-  async deleteMultiple(req, res) {
-    let category;
-
-    try {
-      const listCategories = req.body.categories;
-
-      listCategories.forEach(async (categoryId) => {
-        category = await Model.findByIdAndDelete(categoryId, { new: true });
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const categories = await Model.find();
-
-      return res.status(200).json(categories);
-    } catch (error) {
-      const _idCompany = req.headers._id;
-
-      await LogModel.create({ _idCompany, message: error, info: category });
       return res.status(400).json({
         success: false,
         message: 'Ocorreu um erro ao excluir a categoria',

@@ -28,11 +28,11 @@ router.put('/admin/company/address', auth, controller.updateAddress);
 router.get('/admin/company/owner', auth, controller.getInfoAdmin);
 router.put('/admin/company/owner', auth, controller.updateInfoAdmin);
 router.put('/admin/company/settings-delivery', auth, controller.updateSettingsDelivery);
+router.put('/admin/company/openinghours', auth, controller.updateOpeningHours);
 // router.put('/admin/company/subscription', auth, controller.subscription);
 
 // Category
 router.post('/admin/categories', auth, categoriesController.create);
-router.post('/admin/categories/delete-multiple', auth, categoriesController.deleteMultiple);
 router.get('/admin/categories', auth, categoriesController.getAll);
 router.get('/admin/categoriesWithProducts', auth, categoriesController.listCategoriesWithProducts);
 router.get('/admin/categories/:categoryId', auth, categoriesController.get);
@@ -40,17 +40,19 @@ router.put('/admin/categories/name/:categoryId', auth, categoriesController.upda
 router.put('/admin/categories', auth, categoriesController.update);
 router.delete('/admin/categories/:categoryId', auth, categoriesController.delete);
 
-// Product
+// Products
 router.get('/admin/products', auth, productsController.getAll);
 router.get('/admin/products/:id', auth, productsController.getProduct);
 router.post('/admin/products', auth, productsController.create);
 router.put('/admin/products/:productId', auth, productsController.update);
 router.post('/admin/products/delete-multiple', auth, productsController.deleteMultiple);
+router.delete('/admin/products/:productId/:companyId', auth, productsController.delete);
 router.delete('/admin/products/deleteImage/:imageId/productId/:productId', auth, productsController.deleteImage);
 router.post('/admin/products/updateImage/productId/:productId', auth, productsController.updateImage);
 
 // Orders
-router.get('/admin/orders', auth, ordersController.getAll);
+router.get('/admin/orders-all', auth, ordersController.getAll);
+router.get('/admin/orders', auth, ordersController.getOrders);
 
 //Payment
 router.get('/admin/all-method-in-category', auth, paymentsController.getMethodInCategory);

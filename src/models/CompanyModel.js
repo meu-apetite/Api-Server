@@ -4,13 +4,14 @@ const { Schema } = mongoose;
 
 const companySchema = new Schema({
   storeUrl: { type: String, required: true },
-  fantasyName: { type: String, required: true }, 
+  fantasyName: { type: String, required: true },
   slogan: String,
   description: String,
   whatsapp: String,
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   active: { type: Boolean, default: true },
+  oline: { type: Boolean, default: false },
   owner: {
     name: { type: String, required: true },
     phoneNumber: { type: String },
@@ -25,32 +26,67 @@ const companySchema = new Schema({
     district: { type: String, trim: true },
     zipCode: { type: String, maxLength: 8 },
     coordinates: { latitude: Number, longitude: Number },
-    freeformAddress: { type: String, trim: true }
+    freeformAddress: { type: String, trim: true },
   },
   custom: {
-    colors: { 
-      primary: { type: String, default: '' }, 
-      secundary: { type: String, default: '' } 
+    colors: {
+      primary: { type: String, default: '' },
+      secundary: { type: String, default: '' },
     },
     logo: { url: String, id: String },
-    gallery: [{ url: String, id: String }]
+    gallery: [{ url: String, id: String }],
   },
   subscription: { endpoint: String, keys: { p256dh: String, auth: String } },
   settings: {
     openingHours: {
-      monday: { type: String },
-      tuesday: { type: String },
-      wednesday: { type: String },
-      thursday: { type: String },
-      friday: { type: String },
-      saturday: { type: String },
-      sunday: { type: String },
+      monday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
+      tuesday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
+      wednesday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
+      thursday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
+      friday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
+      saturday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
+      sunday: {
+        open: { type: String, default: '09:00' },
+        close: { type: String, default: '23:00' },
+        alwaysOpen: { type: Boolean, default: false },
+        alwaysClosed: { type: Boolean, default: false },
+      },
     },
   },
   settingsPayment: {
     methods: {
-      type: [{ id: String, title: String, parent: String }], 
-      default: allMethods
+      type: [{ id: String, title: String, parent: String }],
+      default: allMethods,
     },
     mercadoPago: { active: Boolean, publicKey: String, accessToken: String },
   },
@@ -62,10 +98,10 @@ const companySchema = new Schema({
       default: 'customerPickup',
       enum: ['automatic', 'customerPickup', 'fixed'],
     },
-    minValue: { type: Number, default: 0},
-    kmValue: { type: Number, default: 0},
-    fixedValue: { type: Number, default: 0}
-  }
-}); 
+    minValue: { type: Number, default: 0 },
+    kmValue: { type: Number, default: 0 },
+    fixedValue: { type: Number, default: 0 },
+  },
+});
 
 export default mongoose.model('companies', companySchema);
