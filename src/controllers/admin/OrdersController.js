@@ -2,7 +2,7 @@ import Model from '../../models/OrdersModel.js';
 
 class OrdersController {
   async getOrders(req, res) {
-    const company = req.headers._id;
+    const company = req.headers.companyid;
     const page = parseInt(req.query.page) || 1;
     const perPage = 10;
 
@@ -23,7 +23,7 @@ class OrdersController {
 
   async getAll(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const orders = await Model.find({ company });
       return res.status(200).json(orders);
     } catch (error) {

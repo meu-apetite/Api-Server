@@ -5,14 +5,14 @@ import axios from 'axios';
 
 class CompanyController {
   async getCompany(req, res) {
-    const companyId = req.headers._id;
+    const companyId = req.headers.companyid;
     const company = await Model.findById(companyId);
     return res.status(200).json(company);
   }
 
   async getData(req, res) {
     try {
-      const id = req.headers._id;
+      const id = req.headers.companyid;
       const company = await Model.findById(id);
 
       return res.status(200).json({
@@ -29,7 +29,7 @@ class CompanyController {
 
   async getInfoAdmin(req, res) {
     try {
-      const id = req.headers._id;
+      const id = req.headers.companyid;
       const company = await Model.findById(id, 'owner');
       return res.status(200).json(company.owner);
     } catch (error) {
@@ -39,7 +39,7 @@ class CompanyController {
 
   async updateInfoAdmin(req, res) {
     try {
-      const id = req.headers._id;
+      const id = req.headers.companyid;
       const { phoneNumber, name, email } = req.body;
       const company = await Model.findByIdAndUpdate(
         id, { $set: { 'owner': { phoneNumber, name, email } } }, { new: true }
@@ -52,7 +52,7 @@ class CompanyController {
 
   async update(req, res) {
     try {
-      const id = req.headers._id;
+      const id = req.headers.companyid;
       const data = req.body;
 
       const company = await Model.findByIdAndUpdate(id, { $set: data }, { new: true });
@@ -65,7 +65,7 @@ class CompanyController {
   async addImageLogo(req, res) {
     upload.single('logo')(req, res, async (err) => {
       try {
-        const companyId = req.headers._id;
+        const companyId = req.headers.companyid;
         let image;
 
         if (req.file) {
@@ -91,7 +91,7 @@ class CompanyController {
 
   async removeImageLogo(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const { id } = req.params;
 
       const result = await cloudinary.uploader.destroy(id);
@@ -106,7 +106,7 @@ class CompanyController {
   async addImageGallery(req, res) {
     upload.single('image')(req, res, async (err) => {
       try {
-        const companyId = req.headers._id;
+        const companyId = req.headers.companyid;
         let image;
 
         if (req.file) {
@@ -135,7 +135,7 @@ class CompanyController {
 
   async removeImageGallery(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const { id } = req.params;
 
       await cloudinary.uploader.destroy(id);
@@ -156,7 +156,7 @@ class CompanyController {
   async updateAddress(req, res) {
     try {
       /** req: {street: string, number: number, zipCode: string, district: string, city: string} **/
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const data = req.body;
       const api = 'https://api.tomtom.com/search/2/geocode';
       const key = 'GmL5wOEl3iWP0n1l6O5sBV0XKo6gHwht';
@@ -194,7 +194,7 @@ class CompanyController {
 
   async getAddress(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const address = await Model.findById(companyId, 'address');
       return res.status(200).json(address);
     } catch (error) {
@@ -205,7 +205,7 @@ class CompanyController {
   async updateSettingsDelivery(req, res) {
     try {
       /** req.body: { allowStorePickup, delivery, deliveryOption, minValue, kmValue } **/
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const data  = req.body;
       const company = await Model.findOneAndUpdate(
         { _id: companyId }, { $set: { settingsDelivery: data } }, { new: true }
@@ -218,7 +218,7 @@ class CompanyController {
 
   async updateOpeningHours(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const company = await Model.findOneAndUpdate(
         { _id: companyId },
         { $set: { 'settings.openingHours': req.body } },

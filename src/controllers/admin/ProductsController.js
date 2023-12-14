@@ -5,7 +5,7 @@ import fs from 'fs';
 
 class ProductController {
   async getAll(req, res) {
-    const company = req.headers._id;
+    const company = req.headers.companyid;
     const page = parseInt(req.query.page) || 1;
     const perPage = 10;
 
@@ -28,7 +28,7 @@ class ProductController {
 
   async getProduct(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const { id } = req.params;
 
       const product = await Model.findById(id)
@@ -46,7 +46,7 @@ class ProductController {
     upload.array('images')(req, res, async (err) => {
       try {
         console.log(err);
-        const company = req.headers._id;
+        const company = req.headers.companyid;
         let {
           name,
           description,
@@ -168,7 +168,7 @@ class ProductController {
       return res.status(200).json(products);
     } catch (error) {
       console.log(error);
-      const _idCompany = req.headers._id;
+      const _idCompany = req.headers.companyid;
 
       await LogModel.create({ _idCompany, message: error, info: product });
       return res.status(400).json({ success: false, message: 'Erro na exclusão do produto' });

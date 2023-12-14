@@ -11,7 +11,7 @@ import mongoose from 'mongoose';
 class CategoriesController {
   async getAll(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const categories = await Model.find({ company });
 
       return res.status(200).json(categories);
@@ -25,7 +25,7 @@ class CategoriesController {
 
   async listCategoriesWithProducts(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const categories = await Model.aggregate([
         { $match: { company: mongoose.Types.ObjectId(company) } },
         {
@@ -72,7 +72,7 @@ class CategoriesController {
 
   async create(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const { title } = req.body;
 
       if (!title.trim().length) {
@@ -126,7 +126,7 @@ class CategoriesController {
 
   async update(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const data = req.body;
 
       for (const c of data) {
@@ -154,7 +154,7 @@ class CategoriesController {
 
   async delete(req, res) {
     try {
-      const company = req.headers._id;
+      const company = req.headers.companyid;
       const { categoryId } = req.params;
       await Model.deleteOne({ _id: categoryId, company });
       const categories = await Model.aggregate([

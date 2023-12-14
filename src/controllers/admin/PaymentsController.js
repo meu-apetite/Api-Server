@@ -13,7 +13,7 @@ class PaymentsController {
 
   async updateCredentialsMercadoPago(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const { publicKey, accessToken } = req.body;
 
       if (!publicKey || !accessToken) {
@@ -37,7 +37,7 @@ class PaymentsController {
   async updatePaymentsMethods(req, res) {
     console.log(req.body)
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const data = req.body;
 
       if (data.length < 1) {
@@ -62,7 +62,7 @@ class PaymentsController {
 
   async getPaymentOptions(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const credentialsMP = { accessToken: false, publicKey: true };
 
       const response = await Model.findById(companyId, 'paymentsMethods paymentOnline');

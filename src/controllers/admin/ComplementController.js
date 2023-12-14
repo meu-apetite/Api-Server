@@ -12,7 +12,7 @@ class ComplementController {
 
   async create(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const data = [...req.body];
       const errors = [];
 
@@ -56,7 +56,7 @@ class ComplementController {
 
   async udpadte(req, res) {
     try {
-      const companyId = req.headers._id;
+      const companyId = req.headers.companyid;
       const data = [...req.body];
       const errors = [];
       const ids = [];
