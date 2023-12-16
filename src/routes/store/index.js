@@ -5,12 +5,12 @@ const router = Router();
 
 const controller = new StoreController();
 
-router.get('/store/products/:storeUrl', controller.getAllProduct);
-router.get('/store/:storeUrl', controller.getStore);
-router.post('/store/estimateValue', controller.estimateValue);
-router.post('/store/payment', controller.getPaymentOptions);
-router.post('/store/calculateFreight', controller.calculateFreight);
-router.post('/store/finishOrder/:storeUrl', controller.finishOrder);
-router.get('/store/:storeUrl/order/:orderId', controller.getOrder);
+router.get('/products/:storeUrl', controller.getCollections);
+router.get('/:storeUrl', controller.getStore);
+router.post('/estimateValue', controller.estimateValue);
+router.post('/payment', controller.getPaymentOptions);
+router.post('/calculateFreight', controller.calculateFreight);
+router.post('/finishOrder/:storeUrl', controller.finishOrder);
+router.get('/:storeUrl/order/:orderId', controller.getOrder);
 
 export default router;

@@ -1,29 +1,64 @@
 import ProductModel from '../models/ProductsModel.js';
 import CompanyModel from '../models/CompanyModel.js';
 import OrdersModel from '../models/OrdersModel.js';
+import CategoriesModel from '../models/CategoriesModel.js';
 import jwt from 'jsonwebtoken';
 import mercadopago from 'mercadopago';
-import axios from 'axios';
 import { NotificationService } from '../services/NotificationService.js';
 import { EmailService } from '../services/EmailService.js';
 import { TomtomService } from '../services/TomtomService.js';
-import { json } from 'express';
+import mongoose from 'mongoose';
+import moment from 'moment-timezone';
 
 class StoreController {
-  async getAllProduct(req, res) {
+  async getCollections(req, res) {
     try {
       const storeUrl = req.params?.storeUrl;
       const company = await CompanyModel.findOne({ storeUrl });
 
-      if (!company) return res.status(400).json({ success: false, message: 'Loja não encontrada' });
+      if (!company) return res.status(404).json({ success: false, message: 'Loja não encontrada' });
 
-      const products = await ProductModel.find({ company: company._id })
-        .populate('category', 'title')
-        .populate({ path: 'complements' })
-        .select('-isActive -company -code')
-        .exec();
+      const productsWithCategories = await CategoriesModel.aggregate([
+        {
+          $match: { company: mongoose.Types.ObjectId(company._id), isActive: true }
+        },
+        {
+          $lookup: {
+            from: 'products',
+            localField: '_id',
+            foreignField: 'category',
+            as: 'products',
+          },
+        },
+        {
+          $project: {
+            title: 1,
+            products: {
+              $filter: {
+                input: '$products',
+                as: 'product',
+                cond: { $eq: ['$$product.isActive', true] },
+              },
+            },
+          },
+        },
+        { $unwind: '$products' },
+        {
+          $lookup: {
+            from: 'complements',
+            localField: 'products.complements',
+            foreignField: '_id',
+            as: 'products.complements',
+          },
+        },
+        {
+          $group: {
+            _id: '$_id', title: { $first: '$title' }, products: { $push: '$products' }
+          },
+        },
+      ]);
 
-      return res.status(200).json(products);
+      return res.status(200).json(productsWithCategories);
     } catch (error) {
       console.log(error);
     }
@@ -33,11 +68,34 @@ class StoreController {
     try {
       const storeUrl = req.params?.storeUrl;
       const store = await CompanyModel.findOne({ storeUrl }).select(
-        'fantasyName description settings settingsPayment custom address subscription settingsDelivery storeUrl'
-      );
+        'fantasyName ' + 'description ' + 'settings ' + 
+        'settingsPayment ' + 'custom ' + 'address ' + 
+        'subscription ' + 'settingsDelivery ' + 'storeUrl'
+      ).lean();
+
+      if (!store) {
+        return res.status(404).json({ success: false, message: 'Cárdapio não encontrado' });
+      }
+
+      const time = moment().tz('America/Sao_Paulo');
+      const days = [
+        'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
+      ];
+      const openDay = store.settings.openingHours[days[time.day()]];
+      const hour = moment(time.format('HH:mm'), 'HH:mm');
+
+      if (
+        hour.isSameOrAfter(moment(openDay.open, 'HH:mm')) 
+        && hour.isSameOrBefore(moment(openDay.close, 'HH:mm'))
+      ) {
+        store.isOpen = true;
+      } else {
+        store.isOpen = false;
+      }
 
       return res.status(200).json(store);
     } catch (error) {
+      console.log(error);
       console.error(error);
     }
   }
@@ -157,10 +215,10 @@ class StoreController {
       }
 
       if (company.settingsDelivery.deliveryOption === 'fixed') {
-        const addressClient = { 
-          ...addressData, 
-          deliveryOption: 'fixed', 
-          price: company.settingsDelivery.fixedValue 
+        const addressClient = {
+          ...addressData,
+          deliveryOption: 'fixed',
+          price: company.settingsDelivery.fixedValue
         };
         const addressToken = jwt.sign(addressClient, process.env.TOKEN_KEY, { expiresIn: '120 days' });
         return res.status(200).json({ address: addressClient, addressToken });
@@ -170,17 +228,17 @@ class StoreController {
         if (!addressData?.zipCode) {
           if (!addressData?.street) {
             return res.status(400).json({ success: false, message: 'Rua não informada' });
-          } 
+          }
           if (!addressData?.district) {
             return res.status(400).json({ success: false, message: 'Bairro não informado' });
-          } 
+          }
           if (!addressData?.city) {
             return res.status(400).json({ success: false, message: 'Cidade não informada' });
-          } 
+          }
           if (!addressData?.number) {
             return res.status(400).json({ success: false, message: 'Número da casa não informado' });
-          } 
-          const address = { ...addressData, problem: 'A taxa não foi calculada automáticamente' }
+          }
+          const address = { ...addressData, problem: 'A taxa não foi calculada automáticamente' };
           const addressToken = jwt.sign(addressData, process.env.TOKEN_KEY, { expiresIn: '120 days' });
           return res.status(200).json({ address: addressData, addressToken });
         }
@@ -218,7 +276,7 @@ class StoreController {
 
   async paymentConfirmation(req, res) {
     try {
-      console.log(req)
+      console.log(req);
     } catch (error) {
       console.error('erroo ', error);
     }
@@ -241,11 +299,15 @@ class StoreController {
 
   getPaymentOptions = async (req, res) => {
     try {
-      console.log(req.body)
       const { companyId, productsToken } = req.body;
-
       const preferenceId = await this.getPreferenceIdMp(jwt.decode(productsToken).products);
       const company = await CompanyModel.findById(companyId, 'settingsPayment');
+
+      console.log({
+        preferenceId,
+        mercadoPago: company.settingsPayment.mercadoPago,
+        methods: company.settingsPayment.methods
+      })
 
       return res.status(200).json({
         preferenceId,
@@ -253,6 +315,7 @@ class StoreController {
         methods: company.settingsPayment.methods
       });
     } catch (error) {
+      console.log(error)
       return res.status(400).json({ success: false });
     }
   };
@@ -260,29 +323,29 @@ class StoreController {
   async finishOrder(req, res) {
     //deliveryType: 'pickup', paymentMethod: 'dinheiro', paymentType: 'inDelivery', products: [{}]
     try {
-      const { 
+      const {
         companyId,
-        productsToken, 
-        addressToken, 
-        deliveryType, 
-        paymentType, 
-        paymentMethod, 
-        email, 
-        name, 
-        phoneNumber 
+        productsToken,
+        addressToken,
+        deliveryType,
+        paymentType,
+        paymentMethod,
+        email,
+        name,
+        phoneNumber
       } = req.body;
       const { products, total } = jwt.decode(productsToken);
       const address = jwt.decode(addressToken);
 
       if (!productsToken) {
-        return res.status(400).json({ 
-          success: false, message: 'É necessário passar o token dos produtos' 
+        return res.status(400).json({
+          success: false, message: 'É necessário passar o token dos produtos'
         });
       }
 
       if (!paymentMethod) {
-        return res.status(400).json({ 
-          success: false, message: 'Método de pagamento não informado' 
+        return res.status(400).json({
+          success: false, message: 'Método de pagamento não informado'
         });
       }
 
@@ -292,7 +355,7 @@ class StoreController {
         products,
         address,
         paymentType,
-        paymentMethod, 
+        paymentMethod,
         total,
         client: { email, name, phoneNumber },
         status: 'awaiting-approval',
@@ -301,20 +364,20 @@ class StoreController {
       const company = await CompanyModel.findById(companyId)
         .select('fantasyName custom address subscription storeUrl');
 
-      if(company?.subscription.endpoint) {
+      if (company?.subscription.endpoint) {
         const notificationService = new NotificationService(company.subscription.endpoint, company.subscription.keys);
         await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
       }
-      
+
       //store email
       await new EmailService().sendEmailOrder(
-        { to: 'gneris177@gmail.com', subject: 'Novo pedido!' }, 
+        { to: 'gneris177@gmail.com', subject: 'Novo pedido!' },
         order
       );
 
       // client email
       await new EmailService().sendEmailOrder(
-        { to: email.trim(), subject: 'Novo pedido!' }, 
+        { to: email.trim(), subject: 'Novo pedido!' },
         order
       );
       // await new EmailService().send({
@@ -336,16 +399,16 @@ class StoreController {
         .select('fantasyName custom address subscription storeUrl');
 
       if (!company._id) {
-        return res.status(400).json({ 
-          success: false, message: 'Não foi possível encontrar a loja' 
+        return res.status(400).json({
+          success: false, message: 'Não foi possível encontrar a loja'
         });
       }
 
       const order = await OrdersModel.findOne({ id: orderId, company: company._id });
 
       if (!order._id) {
-        return res.status(400).json({ 
-          success: false, message: 'Não foi possível encontrar o pedido' 
+        return res.status(400).json({
+          success: false, message: 'Não foi possível encontrar o pedido'
         });
       }
 
