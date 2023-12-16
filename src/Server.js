@@ -24,10 +24,10 @@ class Server {
   }
 
   route() {
-    this.app.use('/api', routeAdmin);
-    this.app.use('/api', routeAuth);
-    this.app.use('/api', routeStore);
- }
+    this.app.use('/api/admin', routeAdmin);
+    this.app.use('/api/auth', routeAuth);
+    this.app.use('/api/store', routeStore);
+  }
 }
 
 export default Server;
