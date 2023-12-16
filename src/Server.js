@@ -8,7 +8,8 @@ import routeStore from './routes/store/index.js';
 
 class Server {
   app = express();
-  PORT = 5000;
+  PORT = 3000;
+  // PORT = 5000;
 
  start() {
     this.config();
@@ -23,9 +24,9 @@ class Server {
   }
 
   route() {
-    this.app.use('/api/admin', routeAdmin);
-    this.app.use('/api/auth', routeAuth);
-    this.app.use('/api/store', routeStore);
+    this.app.use('/api', routeAdmin);
+    this.app.use('/api', routeAuth);
+    this.app.use('/api', routeStore);
  }
 }
 
