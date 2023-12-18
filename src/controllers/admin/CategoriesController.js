@@ -1,6 +1,5 @@
 import Model from '../../models/CategoriesModel.js';
 import ProductsModel from '../../models/ProductsModel.js';
-import LogModel from '../../models/LogModel.js';
 import mongoose from 'mongoose';
 
 /**
@@ -9,6 +8,24 @@ import mongoose from 'mongoose';
  */
 
 class CategoriesController {
+
+  async getCategoriesWithProducts(companyId){
+    const result = await Model.aggregate([
+      { $match: { company: mongoose.Types.ObjectId(companyId) } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: '_id',
+          foreignField: 'category',
+          as: 'products',
+        },
+      },
+      { $sort: { displayPosition: 1 } },
+    ]);
+
+    return result;
+  }
+
   async getAll(req, res) {
     try {
       const company = req.headers.companyid;
@@ -23,25 +40,12 @@ class CategoriesController {
     }
   }
 
-  async listCategoriesWithProducts(req, res) {
+  listCategoriesWithProducts = async(req, res) => {
     try {
       const company = req.headers.companyid;
-      const categories = await Model.aggregate([
-        { $match: { company: mongoose.Types.ObjectId(company) } },
-        {
-          $lookup: {
-            from: 'products',
-            localField: '_id',
-            foreignField: 'category',
-            as: 'products',
-          },
-        },
-        { $sort: { displayPosition: 1 } },
-      ]);
-
+      const categories = await this.getCategoriesWithProducts(company)
       return res.status(200).json(categories);
     } catch (error) {
-      console.log(error);
       return res.status(400).json({
         success: false,
         message: 'Falha na requisição, tente novamente mais tarde',
@@ -53,11 +57,12 @@ class CategoriesController {
     try {
       const id = req.params?.categoryId;
 
-      if (!id)
+      if (!id) {
         return res.status(400).json({
           success: false,
           message: 'É preciso informar o id da categoria',
         });
+      }
 
       const category = await Model.findById(id);
 
@@ -143,7 +148,9 @@ class CategoriesController {
         }
       }
 
-      res.status(200).json('result');
+      const categories = await this.getCategoriesWithProducts(company)
+
+      res.status(200).json(categories);
     } catch (error) {
       return res.status(400).json({
         success: false,
@@ -156,6 +163,16 @@ class CategoriesController {
     try {
       const company = req.headers.companyid;
       const { categoryId } = req.params;
+
+      const hasProductsInCategory = await ProductsModel.findOne({ category: categoryId });
+
+      if (hasProductsInCategory?._id) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Não foi possível excluir a categoria, pois ainda existem produtos vinculados a ela.'
+        });
+      };
+
       await Model.deleteOne({ _id: categoryId, company });
       const categories = await Model.aggregate([
         { $match: { company: mongoose.Types.ObjectId(company) } },
@@ -170,7 +187,6 @@ class CategoriesController {
       ]);
       return res.status(200).json(categories);
     } catch (error) {
-      await LogModel.create({ categoryId, message: error, info: category });
       return res.status(400).json({
         success: false,
         message: 'Ocorreu um erro ao excluir a categoria',

@@ -16,6 +16,8 @@ class ComplementController {
       const data = [...req.body];
       const errors = [];
 
+      console.log(data)
+
       data.forEach((item, index) => {
         const options = [...item.options];
         let optionErrors = 0;
@@ -54,10 +56,9 @@ class ComplementController {
     }
   }
 
-  async udpadte(req, res) {
+  async updateComplements(data) {
     try {
-      const companyId = req.headers.companyid;
-      const data = [...req.body];
+      const companyId = data.companyId;
       const errors = [];
       const ids = [];
 
@@ -84,14 +85,35 @@ class ComplementController {
         data[index]['company'] = companyId;
       });
 
-      if (errors.length) return res.status(200).json({ success: false, message: errors.join('. \n ') });
+      if (errors.length) {
+        return { success: false, message: errors.join('. \n ') };
+      }
 
-      data.forEach(async (complement) => {
-        const result = await Model.findByIdAndUpdate(complement._id, complement, { new: true });
-        ids.push(result._id);
-      });
+      for (const complement of data) {
+        const result = await Model.findByIdAndUpdate(
+          complement._id, complement, { new: true }
+        );      
+      }
 
-      return res.status(200).json(ids); 
+      return { success: true };
+    } catch (error) {
+      console.log(error);
+      return { success: false, message: 'Falha na requisição, tente novamente mais tarde' };
+    }
+  }
+
+  async udpadte(req, res) {
+    try {
+      const companyId = req.headers.companyid;
+      const data = [...req.body];
+
+      const updateResult = await this.updateComplements({ companyId, data });
+
+      if (updateResult.success) {
+        return res.status(200).json({ success: true });
+      } else {
+        return res.status(400).json({ success: false, message: updateResult.message });
+      }
     } catch (error) {
       console.log(error);
       return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });

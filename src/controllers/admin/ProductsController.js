@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductsModel.js';
 import { upload } from '../../settings/multer.js';
 import fs from 'fs';
+import ComplementController from './ComplementController.js';
 
 class ProductController {
   async getAll(req, res) {
@@ -45,7 +46,6 @@ class ProductController {
   async create(req, res) {
     upload.array('images')(req, res, async (err) => {
       try {
-        console.log(err);
         const company = req.headers.companyid;
         let {
           name,
@@ -66,15 +66,15 @@ class ProductController {
             message: 'Nome não pode ficar em branco'
           });
         }
-
+        if (isNaN(price)) {
+          return res.status(400).json({ success: false, message: 'Preço inválido' });
+        }
         if (typeof (Number(price)) !== 'number') {
           return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
-
         if (req.files.length <= 0) {
           return res.status(400).json({ success: false, message: 'É preciso enviar a foto do ptoduto' });
         }
-
         if (req.files.length) {
           const uploadPromises = req.files.map(file => {
             return cloudinary.uploader.upload(file.path, { folder: company });
@@ -82,21 +82,20 @@ class ProductController {
           const uploads = await Promise.all(uploadPromises);
           uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
         }
-
         if (!category) {
           return res.status(400).json({ success: false, message: 'É preciso selecionar a categoria' });
         }
 
         const productLast = await Model.findOne({ category })
-          .sort({ createdAt: -1 })
+          .sort({ displayPosition: -1 })
           .exec();
 
         const product = await Model.create({
           isActive,
           company,
           name,
-          description,
-          code,
+          description: description || '',
+          code: code || '',
           category,
           images,
           discountPrice,
@@ -104,7 +103,6 @@ class ProductController {
           price: Number(price),
           complements: JSON.parse(complements)
         });
-
 
         res.status(200).json(product);
       } catch (error) {
@@ -115,15 +113,63 @@ class ProductController {
   }
 
   async update(req, res) {
-    try {
-      await Model.findByIdAndUpdate(req.params.productId, req.body);
-      return res.redirect(`/admin/product/update/${req.params.productId}`);
-    } catch (error) {
-      return console.log(error);
-      return res.render(`admin/product/update/${req.params.productId}`, {
-        product: [data],
-      });
-    }
+    const updateData = {};
+
+    upload.array('images')(req, res, async (err) => {
+      try {
+        const { productId } = req.params;
+        const company = req.headers.companyid;
+        const data = req.body;
+
+        if (!data.name.trim().length) {
+          return res.status(400).json({
+            success: false, message: 'Nome não pode ficar em branco'
+          });
+        }
+        if (Number(data.price) == NaN) {
+          return res.status(400).json({
+            success: false, message: 'Preço inválido'
+          });
+        }
+        if (typeof (Number(data.price)) !== 'number') {
+          return res.status(400).json({
+            success: false, message: 'Preço inválido'
+          });
+        }
+        if (data.images?.length <= 0 && req.files.length <= 0) {
+          return res.status(400).json({
+            success: false, message: 'É preciso enviar a foto do produto'
+          });
+        }
+     
+        if (req.files.length) {
+          //remove
+          await cloudinary.uploader.destroy(data.imageId);
+          //new image
+          const result = await cloudinary.uploader.upload(req.files[0].path, { folder: company });
+          updateData.images = [{ id: result.public_id, url: result.url }];
+        }
+
+        updateData.name = data.name;
+        updateData.description = data.description;
+        updateData.code = data.code;
+        updateData.price = data.price;
+        updateData.priceFormat = data.priceFormat;
+        updateData.discountPrice = data.discountPrice;
+        updateData.discountPriceFormat = data.discountPriceFormat;
+        updateData.status = data.status;
+        updateData.category = data.category;
+        updateData.unit = data.unit;
+
+        await new ComplementController().updateComplements(JSON.parse(data.complements));
+        await Model.findByIdAndUpdate(productId, updateData);
+
+        res.status(200).json({ success: true, message: 'Produto atualizado.' });
+      } catch (error) {
+        console.log(error);
+        return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
+      }
+    });
   }
 
   async delete(req, res) {
@@ -169,8 +215,6 @@ class ProductController {
     } catch (error) {
       console.log(error);
       const _idCompany = req.headers.companyid;
-
-      await LogModel.create({ _idCompany, message: error, info: product });
       return res.status(400).json({ success: false, message: 'Erro na exclusão do produto' });
     }
   }

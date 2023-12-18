@@ -51,8 +51,8 @@ router.delete('/products/deleteImage/:imageId/productId/:productId', auth, produ
 router.post('/products/updateImage/productId/:productId', auth, productsController.updateImage);
 
 // Orders
-router.get('/admin/orders-all', auth, ordersController.getAll);
-router.get('/admin/orders', auth, ordersController.getOrders);
+router.get('/orders-dashboard', auth, ordersController.getOrdersdashboard);
+router.get('/orders', auth, ordersController.getOrders);
 
 //Payment
 router.get('/all-method-in-category', auth, paymentsController.getMethodInCategory);

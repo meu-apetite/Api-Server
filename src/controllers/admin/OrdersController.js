@@ -21,7 +21,7 @@ class OrdersController {
     }
   }
 
-  async getAll(req, res) {
+  async getOrdersdashboard(req, res) {
     try {
       const company = req.headers.companyid;
       const orders = await Model.find({ company });
