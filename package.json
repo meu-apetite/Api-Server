@@ -19,6 +19,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "homepage": "/admin",
   "devDependencies": {
     "babel-eslint": "^10.1.0",
     "eslint": "^8.19.0",

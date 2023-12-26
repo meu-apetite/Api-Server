@@ -29,10 +29,8 @@ const companySchema = new Schema({
     freeformAddress: { type: String, trim: true },
   },
   custom: {
-    colors: {
-      primary: { type: String, default: '' },
-      secundary: { type: String, default: '' },
-    },
+    colorPrimary: { type: String, default: '#800080' },
+    colorSecondary: { type: String, default: '#00FF00' },
     logo: { url: String, id: String },
     gallery: [{ url: String, id: String }],
   },

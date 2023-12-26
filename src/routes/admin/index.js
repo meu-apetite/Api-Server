@@ -18,14 +18,13 @@ const router = Router();
 
 // Company
 router.get('/company', auth, controller.getCompany);
-router.put('/company', auth, controller.update);
+router.put('/company/appearance', auth, controller.updateAppearance);
 router.post('/company/gallery', auth, controller.addImageGallery);
 router.delete('/company/gallery/:id', auth, controller.removeImageGallery);
-router.post('/company/logo', auth, controller.addImageLogo);
+router.post('/company/logo', auth, controller.updateLogo);
 router.delete('/company/logo/:id', auth, controller.removeImageLogo);
 router.get('/company/address', auth, controller.getAddress);
 router.put('/company/address', auth, controller.updateAddress);
-router.get('/company/owner', auth, controller.getInfoAdmin);
 router.put('/company/owner', auth, controller.updateInfoAdmin);
 router.put('/company/settings-delivery', auth, controller.updateSettingsDelivery);
 router.put('/company/openinghours', auth, controller.updateOpeningHours);
@@ -46,7 +45,7 @@ router.get('/products/:id', auth, productsController.getProduct);
 router.post('/products', auth, productsController.create);
 router.put('/products/:productId', auth, productsController.update);
 router.post('/products/delete-multiple', auth, productsController.deleteMultiple);
-router.delete('/products/:productId/:companyId', auth, productsController.delete);
+router.delete('/products/:productId/:companyId/:page', auth, productsController.delete);
 router.delete('/products/deleteImage/:imageId/productId/:productId', auth, productsController.deleteImage);
 router.post('/products/updateImage/productId/:productId', auth, productsController.updateImage);
 

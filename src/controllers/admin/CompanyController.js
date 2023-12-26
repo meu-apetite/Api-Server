@@ -27,16 +27,6 @@ class CompanyController {
     }
   }
 
-  async getInfoAdmin(req, res) {
-    try {
-      const id = req.headers.companyid;
-      const company = await Model.findById(id, 'owner');
-      return res.status(200).json(company.owner);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   async updateInfoAdmin(req, res) {
     try {
       const id = req.headers.companyid;
@@ -50,41 +40,62 @@ class CompanyController {
     }
   }
 
-  async update(req, res) {
+  async updateAppearance(req, res) {
     try {
-      const id = req.headers.companyid;
-      const data = req.body;
+      const companyId = req.headers.companyid;
+      const {
+        fantasyName, 
+        description, 
+        colorPrimary, 
+        colorSecondary,
+        slogan
+      } = req.body;
 
-      const company = await Model.findByIdAndUpdate(id, { $set: data }, { new: true });
-      return res.status(200).json(company);
+      const updatedCompany = await Model.findOneAndUpdate(
+        { _id: companyId },
+        {
+          $set: {
+            'custom.colorPrimary': colorPrimary,
+            'custom.colorSecondary': colorSecondary,
+            fantasyName, description, slogan
+          },
+        },
+        { new: true } 
+      );
+      
+      return res.status(200).json(updatedCompany);
     } catch (error) {
       console.log(error);
     }
   }
 
-  async addImageLogo(req, res) {
+  async updateLogo(req, res) {
     upload.single('logo')(req, res, async (err) => {
       try {
         const companyId = req.headers.companyid;
-        let image;
 
-        if (req.file) {
-          const upload = await cloudinary.uploader.upload(req.file.path, { folder: companyId });
-          image = { url: upload.url, id: upload.public_id };
-        }
+        if (!req.file) return res.status(400).json({ 
+          success: false, 
+          message: 'Não foi possível atualizar o logo' 
+        });
 
-        if (!image) {
-          res.status(400).json({ success: false, message: 'Não foi possível atualizar o logo' });
-          return;
-        }
+        const { custom } = await Model.findById(companyId, 'custom.logo');
+        if (custom.logo.url) await cloudinary.uploader.destroy(id);
 
-        await Model.findByIdAndUpdate(companyId, { $set: { 'custom.logo': image } });
-
+        const upload = await cloudinary.uploader
+          .upload(req.file.path, { folder: companyId });
+        
+        await Model.findByIdAndUpdate(
+          companyId, { 
+            $set: { 'custom.logo': { url: upload.url, id: upload.public_id } } 
+          }
+        );
+        
         res.status(200).json(image);
       } catch (error) {
-        console.log(error);
-
-        return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
+        return res.status(400).json({ 
+          success: false, message: 'Erro ao atualizar a logo' 
+        });
       }
     });
   }

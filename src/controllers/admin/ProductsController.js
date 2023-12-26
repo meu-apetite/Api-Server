@@ -174,21 +174,27 @@ class ProductController {
 
   async delete(req, res) {
     try {
-      const { productId, companyId } = req.params;
+      const { productId, companyId, page } = req.params;
 
       if (!productId) {
-        return res.status(400).json({ success: false, message: 'Produto não encontrado' });
+        return res.status(400).json({ 
+          success: false, message: 'Produto não encontrado' 
+        });
       }
 
       const product = await Model.findByIdAndDelete(productId, { new: true });
-
+      
       if (product.images.length >= 1) {
         product.images.map(async (img) => await cloudinary.uploader.destroy(img.id));
       }
-
-      const products = await Model.find({ company: companyId });
-
-      return res.status(200).json(products);
+      
+      const products = await Model.find({ companyId })
+        .populate('category', 'title')
+        .skip((page - 1) * 10)
+        .limit(10)
+        .exec();
+        
+      return res.status(200).json({ products });
     } catch (error) {
       console.log(error);
       return res.status(400).json({ success: false, message: 'Erro ao produto' });
@@ -213,7 +219,6 @@ class ProductController {
 
       return res.status(200).json(products);
     } catch (error) {
-      console.log(error);
       const _idCompany = req.headers.companyid;
       return res.status(400).json({ success: false, message: 'Erro na exclusão do produto' });
     }

@@ -58,13 +58,13 @@ class Auth {
       const data = { ...req.body };
       
       //Validation
-      if (!checkValidation.email(data.email)) {
+      if (!checkValidation.email(data.email.trim())) {
         return res.status(401).json({ 
           success: false, message: 'Email inválido!' 
         });
       }
 
-      const company = await Model.findOne({ 'email': data.email })
+      const company = await Model.findOne({ 'email': data.email.trim() })
         .select('name email password');
 
       if (
@@ -76,9 +76,9 @@ class Auth {
         });
       }
 
-      delete data.subscription.expirationTime;
+      delete data?.subscription?.expirationTime;
 
-      await Model.findByIdAndUpdate(company._id, { subscription: data.subscription });
+      await Model.findByIdAndUpdate(company._id, { subscription: data?.subscription });
 
       const token = jwt.sign(
         { id: company._id, email: company.email },
