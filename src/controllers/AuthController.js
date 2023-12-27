@@ -12,8 +12,6 @@ class Auth {
       const data = { ...req.body };
       const messages = [];
 
-      console.log(data)
-
       Object.keys(data).forEach((item) => {
         if (!checkValidation[item]) return;
         const validation = checkValidation[item](data[item]);
@@ -22,14 +20,20 @@ class Auth {
 
       if (messages.length) {
         return res.status(400).json({
-          success: false, message: `${messages.join(", ")}`
+          success: false, message: `${messages.map(error => `• ${error}`).join('\n')}`
         });
       }
 
-      const existingUser = await Model.findOne({ email: data.email });
+      const existingUser = await Model.findOne({
+        $or: [{ email: data.email }, { storeUrl: data.storeUrl }]
+      });
 
       if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Email já cadastrado' });
+        if (existingUser.email === data.email) {
+          return res.status(400).json({ success: false, message: 'Email já cadastrado' });
+        } else {
+          return res.status(400).json({ success: false, message: 'URL já cadastrada' });
+        }
       }
 
       await Model.create({
@@ -38,7 +42,8 @@ class Auth {
         owner: { name: data.ownerName },
         description: data.description,
         email: data.email,
-        password: bcrypt.hashSync(data.password, 12)
+        password: bcrypt.hashSync(data.password, 12), 
+        whatsapp: data.whatsapp
       });
 
       return res.status(200).json({ 

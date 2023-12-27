@@ -1,12 +1,23 @@
 import Model from '../../models/CompanyModel.js';
+import VerificationCodesModel from '../../models/VerificationCodesModel.js';
 import { v2 as cloudinary } from 'cloudinary';
 import { upload } from '../../settings/multer.js';
+import { EmailService } from '../../services/EmailService.js';
 import axios from 'axios';
 
 class CompanyController {
   async getCompany(req, res) {
     const companyId = req.headers.companyid;
     const company = await Model.findById(companyId);
+    if (!company.online) {
+      if (company.verifyEmail && company.address.zipCode && company.custom.logo?.url?.length > 0) {
+        await Model.findOneAndUpdate(
+          { _id: companyId },
+          { $set: { online: true } },
+          { upsert: true, new: true }
+        );
+      }
+    }
     return res.status(200).json(company);
   }
 
@@ -37,6 +48,30 @@ class CompanyController {
       return res.status(200).json(company.owner);
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async updateInfoContact(req, res) {
+    try {
+      const id = req.headers.companyid;
+      const { whatsapp, email } = req.body;
+  
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+      if (!email || !emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'E-mail inválido.' });
+      }
+
+      if (!whatsapp) {
+        return res.status(400).json({ success: false, message: 'Whatsapp inválido.' });
+      }
+  
+      await Model.findByIdAndUpdate( id, { $set: { whatsapp, email } });
+  
+      return res.status(200).json({ whatsapp, email });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
   }
 
@@ -238,6 +273,55 @@ class CompanyController {
       return res.status(200).json(company.settings.openingHours);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  async sendCodeEmail(req, res) {
+    try {
+      const companyId = req.headers.companyid;
+
+      const company = await Model.findById(companyId, 'email name');
+
+      function randomCode() {
+        const code = Math.floor(10000 + Math.random() * 90000); 
+        return code.toString(); 
+      }
+
+      const code = randomCode()
+
+      await VerificationCodesModel.findOneAndUpdate(
+        { company: companyId },
+        { $set: { code } },
+        { upsert: true, new: true }
+      );
+
+      await new EmailService().sendCode(
+        { to: company.email, subject: 'Código de verificação' },
+        code, company.name
+      );
+
+      return res.status(200).json({ success: true, message: 'Código enviado!' });
+    } catch (error) {
+      console.error(error);
+      return res.status(400).json({ success: false, message: 'Não foi possível enviar o código de verificação.' });
+    }
+  };
+
+  async verifyCode(req, res) {
+    try {
+      const companyId = req.headers.companyid;
+      const { code } = req.body;
+      const verify = await VerificationCodesModel.findOne({ company: companyId });
+
+      if (code != verify.code) {
+        return res.status(400).json({ success: false, message: 'Código incorreto!' });
+      }
+
+      await Model.findByIdAndUpdate(companyId, { $set: { verifyEmail: true } });
+      return res.status(200).json({ success: true, message: 'Email verifcado!' });
+    } catch (error) {
+      console.error(error);
+      return res.status(400).json({ success: false, message: 'Não foi possível verificar o código.' });
     }
   };
 }

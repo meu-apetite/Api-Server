@@ -45,12 +45,7 @@ const productsSchema = new Schema({
   },
   images: [{ url: String, id: String }],
   displayPosition: { type: Number },
+  date: { type: Date, default: () => moment().tz('America/Sao_Paulo') },
 });
-
-// productsSchema.pre('save', async function (next) {
-//   const data = this;
-//   console.log(data)
-//   next();
-// });
 
 export default mongoose.model('products', productsSchema);

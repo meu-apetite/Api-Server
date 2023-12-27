@@ -26,8 +26,11 @@ router.delete('/company/logo/:id', auth, controller.removeImageLogo);
 router.get('/company/address', auth, controller.getAddress);
 router.put('/company/address', auth, controller.updateAddress);
 router.put('/company/owner', auth, controller.updateInfoAdmin);
+router.put('/company/contact', auth, controller.updateInfoContact);
 router.put('/company/settings-delivery', auth, controller.updateSettingsDelivery);
 router.put('/company/openinghours', auth, controller.updateOpeningHours);
+router.get('/company/code', auth, controller.sendCodeEmail);
+router.post('/company/code', auth, controller.verifyCode);
 // router.put('/company/subscription', auth, controller.subscription);
 
 // Category
