@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import moment from 'moment-timezone';
 const { Schema } = mongoose;
 
 const units = ['g', 'kg', 'mL', 'L', 'un', 'pct', 'cx', 'porc'];
@@ -34,10 +35,6 @@ const productsSchema = new Schema({
   unit: {
     type: String,
     lowercase: true,
-    validate: {
-      validator: (value) => units.includes(value),
-      message: 'Unidade de medida inválida',
-    },
   },
   isActive: {
     type: Boolean,

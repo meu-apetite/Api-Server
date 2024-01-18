@@ -7,6 +7,7 @@ import mercadopago from 'mercadopago';
 import { NotificationService } from '../services/NotificationService.js';
 import { EmailService } from '../services/EmailService.js';
 import { TomtomService } from '../services/TomtomService.js';
+import { PixService } from '../services/Pixservice.js';
 import mongoose from 'mongoose';
 import moment from 'moment-timezone';
 
@@ -303,16 +304,11 @@ class StoreController {
       const preferenceId = await this.getPreferenceIdMp(jwt.decode(productsToken).products);
       const company = await CompanyModel.findById(companyId, 'settingsPayment');
 
-      console.log({
-        preferenceId,
-        mercadoPago: company.settingsPayment.mercadoPago,
-        methods: company.settingsPayment.methods
-      })
-
       return res.status(200).json({
         preferenceId,
         mercadoPago: company.settingsPayment.mercadoPago,
-        methods: company.settingsPayment.methods
+        methods: company.settingsPayment.methods,
+        pix: company.settingsPayment.pix
       });
     } catch (error) {
       console.log(error)
@@ -334,20 +330,22 @@ class StoreController {
         name,
         phoneNumber
       } = req.body;
-      const { products, total } = jwt.decode(productsToken);
+
+      const { products, total: totalProduct } = jwt.decode(productsToken);
       const address = jwt.decode(addressToken);
+      const total = totalProduct + (address?.price || 0);
 
       if (!productsToken) {
-        return res.status(400).json({
-          success: false, message: 'É necessário passar o token dos produtos'
-        });
+        return res.status(400).json({ success: false, message: 'É necessário passar o token dos produtos' });
+      }
+      if (!paymentMethod) {
+        return res.status(400).json({ success: false, message: 'Método de pagamento não informado' });
       }
 
-      if (!paymentMethod) {
-        return res.status(400).json({
-          success: false, message: 'Método de pagamento não informado'
-        });
-      }
+      let status = { name: "OrderReceived", label: "Pedido Recebido" };
+      if (paymentType === 'pix') {
+        status =  { name: "WaitingForPaymentConfirmation", label: "Aguardando Confirmação de Pagamento." };
+      } 
 
       const order = await OrdersModel.create({
         company: companyId,
@@ -357,8 +355,8 @@ class StoreController {
         paymentType,
         paymentMethod,
         total,
+        status,
         client: { email, name, phoneNumber },
-        status: 'awaiting-approval',
       });
 
       const company = await CompanyModel.findById(companyId)
@@ -370,22 +368,10 @@ class StoreController {
       }
 
       //store email
-      await new EmailService().sendEmailOrder(
-        { to: 'gneris177@gmail.com', subject: 'Novo pedido!' },
-        order
-      );
-
+      await new EmailService().sendEmailOrder({ to: company.email, subject: 'Novo pedido!' }, order);
       // client email
-      await new EmailService().sendEmailOrder(
-        { to: email.trim(), subject: 'Novo pedido!' },
-        order
-      );
-      // await new EmailService().send({
-      //   to: email.trim(),
-      //   subject: 'Pedido recibo!',
-      //   text: `Olá ${name.trim()}, obrigado por ter comprado conosco, seu pedido está em preparo`,
-      // });
-
+      await new EmailService().sendEmailOrder({ to: email.trim(), subject: 'Novo pedido!' }, order);
+   
       return res.json({ order, company });
     } catch (error) {
       console.log('erroo ', error);
@@ -395,21 +381,41 @@ class StoreController {
   async getOrder(req, res) {
     try {
       const { storeUrl, orderId } = req.params;
-      const company = await CompanyModel.findOne({ storeUrl })
-        .select('fantasyName custom address subscription storeUrl');
+      const company = await CompanyModel.findOne({ storeUrl }).select(
+        'fantasyName custom address subscription storeUrl whatsapp settingsPayment'
+      ).lean();
 
       if (!company._id) {
-        return res.status(400).json({
-          success: false, message: 'Não foi possível encontrar a loja'
-        });
+        return res.status(400).json({ success: false, message: 'Não foi possível encontrar a loja' });
       }
 
       const order = await OrdersModel.findOne({ id: orderId, company: company._id });
 
+      const settingsPayment = company.settingsPayment;
+      delete company.settingsPayment
+      
+      if (order.status?.name == 'WaitingForPaymentConfirmation' && order.paymentType == 'pix') {
+        console.log(          
+          settingsPayment.pix.key,
+          settingsPayment.pix.name,
+          settingsPayment.pix.city,
+          order.id,
+          order.total
+        )
+
+        const pix = new PixService(
+          settingsPayment.pix.key,
+          "TESTE",
+          settingsPayment.pix.name,
+          settingsPayment.pix.city,
+          ''+order.id,
+          order.total
+        );
+        company.pixCode = pix.getPayload();
+      }
+
       if (!order._id) {
-        return res.status(400).json({
-          success: false, message: 'Não foi possível encontrar o pedido'
-        });
+        return res.status(400).json({ success: false, message: 'Não foi possível encontrar o pedido' });
       }
 
       return res.status(200).json({ order, company });

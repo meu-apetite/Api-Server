@@ -88,6 +88,17 @@ const companySchema = new Schema({
       default: allMethods,
     },
     mercadoPago: { active: Boolean, publicKey: String, accessToken: String },
+    pix: {
+      active: { default: false, type: Boolean },
+      key: String,
+      name: String,
+      city: String,
+      keyType: {
+        type: String,
+        enum: ['cpf', 'email', 'telefone', 'aleatoria' ]
+      }
+    }
+    
   },
   settingsDelivery: {
     allowStorePickup: { type: Boolean, default: true },

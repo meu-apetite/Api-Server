@@ -11,11 +11,13 @@ class CompanyController {
     const company = await Model.findById(companyId);
     if (!company.online) {
       if (company.verifyEmail && company.address.zipCode && company.custom.logo?.url?.length > 0) {
-        await Model.findOneAndUpdate(
+        const updateComapny = await Model.findOneAndUpdate(
           { _id: companyId },
           { $set: { online: true } },
           { upsert: true, new: true }
         );
+
+        return res.status(200).json(updateComapny);
       }
     }
     return res.status(200).json(company);
@@ -126,8 +128,9 @@ class CompanyController {
           }
         );
         
-        res.status(200).json(image);
+        res.status(200).json({ url: upload.url, id: upload.public_id });
       } catch (error) {
+        console.log(error)
         return res.status(400).json({ 
           success: false, message: 'Erro ao atualizar a logo' 
         });

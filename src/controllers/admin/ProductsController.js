@@ -1,32 +1,44 @@
 import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductsModel.js';
 import { upload } from '../../settings/multer.js';
-import fs from 'fs';
-import ComplementController from './ComplementController.js';
+import ComplementsController from './ComplementsController.js';
 
 class ProductController {
   async getAll(req, res) {
     const company = req.headers.companyid;
     const page = parseInt(req.query.page) || 1;
     const perPage = 10;
-
+    const searchTerm = req.query.search || '';
+    const filterStatus = req.query.filter || '';
+    const filterCategory = req.query.filterCategory || '';
+  
     try {
-      const totalProducts = await Model.countDocuments({ company });
+      const filter = { company };
+  
+      if (searchTerm) {
+        filter.$or = [{ name: { $regex: searchTerm, $options: 'i' } }];
+      }
+  
+      if (filterStatus) filter.isActive = filterStatus === 'ativo';
+  
+      if (filterCategory) filter.category = filterCategory;
+  
+      const totalProducts = await Model.countDocuments(filter);
       const totalPages = Math.ceil(totalProducts / perPage);
-
-      const products = await Model.find({ company })
+  
+      const products = await Model.find(filter)
         .populate('category', 'title')
         .skip((page - 1) * perPage)
         .limit(perPage)
         .exec();
-
+  
       return res.status(200).json({ products, totalPages, page });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
-
+  
   async getProduct(req, res) {
     try {
       const company = req.headers.companyid;
@@ -44,6 +56,8 @@ class ProductController {
   }
 
   async create(req, res) {
+    let productCreate = null;
+
     upload.array('images')(req, res, async (err) => {
       try {
         const company = req.headers.companyid;
@@ -52,12 +66,12 @@ class ProductController {
           description,
           code,
           price,
+          unit,
           discountPrice,
           isActive,
           category,
           complements
         } = req.body;
-        complements = complements || "[]";
         const images = [];
 
         if (!name.trim().length) {
@@ -90,24 +104,38 @@ class ProductController {
           .sort({ displayPosition: -1 })
           .exec();
 
-        const product = await Model.create({
-          isActive,
-          company,
-          name,
+        productCreate = await Model.create({
+          isActive: isActive || true,
           description: description || '',
           code: code || '',
+          company,
+          name,
+          unit,
           category,
           images,
           discountPrice,
           displayPosition: (productLast?.displayPosition + 1 || 1),
           price: Number(price),
-          complements: JSON.parse(complements)
         });
 
-        res.status(200).json(product);
+        if (complements?.length > 0) {
+          const complementAdd = await new ComplementsController()
+            .createComplement(JSON.parse(complements), company);
+          await Model.findByIdAndUpdate(productCreate._id, { complements: complementAdd });
+        }
+
+        res.status(200).json({ success: true, message: 'Produto criado!' });
       } catch (error) {
-        console.log(error);
-        return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
+        console.log(error)
+        if (productCreate) {
+          await Model.findByIdAndDelete(productCreate._id);
+
+          return res.status(400).json({ 
+            success: false, 
+            message: 'Não foi possível criar os complementos do produto' 
+          });
+        }
+        return res.status(400).json({ success: false, message: 'Erro ao tentar criar o produto' });
       }
     });
   }
@@ -161,7 +189,7 @@ class ProductController {
         updateData.category = data.category;
         updateData.unit = data.unit;
 
-        await new ComplementController().updateComplements(JSON.parse(data.complements));
+        await new ComplementsController().updateComplements(JSON.parse(data.complements));
         await Model.findByIdAndUpdate(productId, updateData);
 
         res.status(200).json({ success: true, message: 'Produto atualizado.' });
@@ -178,7 +206,8 @@ class ProductController {
 
       if (!productId) {
         return res.status(400).json({ 
-          success: false, message: 'Produto não encontrado' 
+          success: false, 
+          message: 'Produto não encontrado' 
         });
       }
 
@@ -187,7 +216,12 @@ class ProductController {
       if (product.images.length >= 1) {
         product.images.map(async (img) => await cloudinary.uploader.destroy(img.id));
       }
-      
+
+      await Model.updateMany(
+        { companyId, category: product.category, displayPosition: { $gt: product.displayPosition } },
+        { $inc: { displayPosition: -1 } }
+      );
+  
       const products = await Model.find({ companyId })
         .populate('category', 'title')
         .skip((page - 1) * 10)
@@ -198,29 +232,6 @@ class ProductController {
     } catch (error) {
       console.log(error);
       return res.status(400).json({ success: false, message: 'Erro ao produto' });
-    }
-  }
-
-  async deleteMultiple(req, res) {
-    try {
-      let product;
-      const { productIds } = req.body;
-
-      productIds.forEach(async (id) => {
-        product = await Model.findByIdAndDelete(id, { new: true });
-        if (product.images.length) {
-          product.images.map(async (id) => await cloudinary.uploader.destroy(id));
-        }
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const products = await Model.find();
-
-      return res.status(200).json(products);
-    } catch (error) {
-      const _idCompany = req.headers.companyid;
-      return res.status(400).json({ success: false, message: 'Erro na exclusão do produto' });
     }
   }
 

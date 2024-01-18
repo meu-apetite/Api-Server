@@ -1,12 +1,48 @@
-import Model from '../../models/ComplementModel.js';
+import Model from '../../models/ComplementsModel.js';
 
-class ComplementController {
-  async getAll(req, res) {
+class ComplementsController {
+  async createComplement(data, company) {
+
     try {
-      const complements = await Model.find();
-      return res.status(200).json(complements);
+      const errors = [];
+
+      console.log(data)
+  
+      data.forEach((item, index) => {
+        const options = [...item.options];
+        let optionErrors = 0;
+  
+        if (!item?.name.trim().length) errors.push('O nome do complemento não pode ficar em branco');
+        if (item?.isRequired) {
+          if (item?.min < 0) errors.push('Quantidade mínima inválida');
+          if (item?.max <= 0) errors.push('Quantidade máxima deve ser igual ou maior que 1');
+        }
+  
+        options.forEach((option, i) => {
+          if (!option?.name.trim().length) optionErrors++;
+        });
+  
+        if (optionErrors) {
+          throw new Error(
+            'O nome da opção de complemento não pode ficar em branco. ' +
+            'Verifique suas opções do complemento ' +
+            item.name
+          );
+        }
+  
+        data[index]['company'] = company;
+      });
+  
+      if (errors.length) throw new Error(errors.join('. \n '));
+      const complements = await Model.insertMany(data);
+  
+      if (complements.length === 0) throw new Error('Nenhum complemento foi inserido.');
+      const ids = complements.map(doc => doc._id);
+  
+      return ids;
     } catch (error) {
-      console.log(error);
+      console.log(error)
+      throw new Error('Não foi possível criar o complemento');
     }
   }
 
@@ -15,8 +51,6 @@ class ComplementController {
       const companyId = req.headers.companyid;
       const data = [...req.body];
       const errors = [];
-
-      console.log(data)
 
       data.forEach((item, index) => {
         const options = [...item.options];
@@ -121,4 +155,4 @@ class ComplementController {
   }
 }
 
-export default ComplementController;
+export default ComplementsController;

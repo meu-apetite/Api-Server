@@ -1,7 +1,6 @@
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
-const orderStatusEnum = ['awaiting-approval', 'ready', 'delivered'];
 
 const ordersSchema = new Schema({
   id: Number,
@@ -16,8 +15,10 @@ const ordersSchema = new Schema({
     phoneNumber: { type: String, required: true },
   },
   status: {
-    type: String,
-    enum: orderStatusEnum,
+    type: {
+      name: { type: String, required: true },
+      label: { type: String, required: true }
+    },
     required: true
   },
   products: [{ 
@@ -30,7 +31,7 @@ const ordersSchema = new Schema({
   }],
   paymentType: {
     type: String,
-    enum: ['online', 'indelivery'],
+    enum: ['online', 'indelivery', 'pix'],
     required: true
   },
   paymentMethod: {

@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
-const uri =
-  'mongodb+srv://superadmin:h5ikyi4Ofad7SCpb@cluster0.4zddaay.mongodb.net/?retryWrites=true&w=majority';
+const localUri = 'mongodb://localhost:27017/meuapetite';
 
-mongoose.connect(uri, {}).catch((error) => console.log(error));
+mongoose.connect(localUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Conexão com o MongoDB local bem-sucedida');
+  })
+  .catch((error) => {
+    console.error('Erro ao conectar ao MongoDB local:', error);
+  });

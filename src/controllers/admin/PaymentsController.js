@@ -9,7 +9,7 @@ class PaymentsController {
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   async updateCredentialsMercadoPago(req, res) {
     try {
@@ -26,8 +26,51 @@ class PaymentsController {
           'settingsPayment.mercadoPago.accessToken': accessToken
         }
       });
-      
+
       return res.status(200).json({ publicKey: true, accessToken: true });
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ success: false });
+    }
+  };
+
+  async updatePix(req, res) {
+    try {
+      const companyId = req.headers.companyid;
+      const { key, keyType, active, name, city } = req.body;
+
+      const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      const validatePhone = (phone) => (phone.replace(/\D/g, '').length !== 11) ? false : true;
+      const validateCPF = (cpf) => (cpf.replace(/\D/g, '').length !== 11) ? false : true;
+
+      if (active) {
+        if (!['aleatorio', 'email', 'telefone', 'cpf'].includes(keyType)) {
+          return res.status(400).json({ success: false, message: 'Tipo de chave inválido' });
+        }
+
+        if (!name || name === '') {
+          return res.status(400).json({ success: false, message: 'Nome do titular vazio' });
+        } 
+
+        if (keyType === 'email' && !validateEmail(key)) {
+          return res.status(400).json({ success: false, message: 'E-mail inválido' });
+        } else if (keyType === 'telefone') {
+          const phoneDigits = key.replace(/\D/g, '');
+          if (!validatePhone(phoneDigits)) {
+            return res.status(400).json({ success: false, message: 'Telefone inválido' });
+          }
+        } else if (keyType === 'cpf' && !validateCPF(key)) {
+          return res.status(400).json({ success: false, message: 'CPF inválido' });
+        }
+
+        if (!city || city === '') {
+          return res.status(400).json({ success: false, message: 'Nome da cidade vazio' });
+        } 
+      }
+
+      await Model.findByIdAndUpdate(companyId, { $set: { 'settingsPayment.pix': { key, keyType, active, name, city } } });
+
+      return res.status(200).json({ key, keyType, active });
     } catch (error) {
       console.log(error);
       return res.status(400).json({ success: false });
@@ -35,27 +78,52 @@ class PaymentsController {
   }
 
   async updatePaymentsMethods(req, res) {
-    console.log(req.body)
     try {
       const companyId = req.headers.companyid;
       const data = req.body;
 
       if (data.length < 1) {
-        return res.status(200).json({ 
-          success: false, 
-          message: 'Não é permitido desativar todas as formas de pagamentos' 
+        return res.status(200).json({
+          success: false,
+          message: 'Não é permitido desativar todas as formas de pagamentos'
         });
       }
 
       const response = await Model.findByIdAndUpdate(
-        companyId,   
+        companyId,
         { $set: { 'settingsPayment.methods': data } },
         { new: true }
       );
 
       return res.status(200).json(response.settingsPayment.methods);
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      return res.status(400).json({ success: false });
+    }
+  }
+
+  async updatePaymentsMethods(req, res) {
+    console.log(req.body);
+    try {
+      const companyId = req.headers.companyid;
+      const data = req.body;
+
+      if (data.length < 1) {
+        return res.status(200).json({
+          success: false,
+          message: 'Não é permitido desativar todas as formas de pagamentos'
+        });
+      }
+
+      const response = await Model.findByIdAndUpdate(
+        companyId,
+        { $set: { 'settingsPayment.methods': data } },
+        { new: true }
+      );
+
+      return res.status(200).json(response.settingsPayment.methods);
+    } catch (error) {
+      console.log(error);
       return res.status(400).json({ success: false });
     }
   }
