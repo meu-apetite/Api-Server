@@ -8,8 +8,7 @@ import routeStore from './routes/store/index.js';
 
 class Server {
   app = express();
-  // PORT = 3000;
-  PORT = 5000;
+  PORT = 3000;
 
  start() {
     this.config();
