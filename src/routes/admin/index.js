@@ -41,6 +41,8 @@ router.get('/categories/:categoryId', auth, categoriesController.get);
 router.put('/categories/name/:categoryId', auth, categoriesController.updateName);
 router.put('/categories', auth, categoriesController.update);
 router.delete('/categories/:categoryId', auth, categoriesController.delete);
+// Financial
+router.get('/finance', auth, controller.getFinancialData);
 
 // Products
 router.get('/products', auth, productsController.getAll);
@@ -56,7 +58,7 @@ router.get('/orders-dashboard', auth, ordersController.getOrdersdashboard);
 router.get('/orders', auth, ordersController.getOrders);
 router.put('/orders', auth, ordersController.updateOrderStatus);
 
-//Payment
+// Payment
 router.get('/all-method-in-category', auth, paymentsController.getMethodInCategory);
 router.get('/payments', auth, paymentsController.getPaymentOptions);
 router.put('/payments', auth, paymentsController.updatePaymentsMethods);

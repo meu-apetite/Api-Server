@@ -18,7 +18,7 @@ class StoreController {
       const company = await CompanyModel.findOne({ storeUrl });
 
       if (!company) return res.status(404).json({ success: false, message: 'Loja não encontrada' });
-
+      
       const productsWithCategories = await CategoriesModel.aggregate([
         {
           $match: { company: mongoose.Types.ObjectId(company._id), isActive: true }
@@ -71,17 +71,15 @@ class StoreController {
       const store = await CompanyModel.findOne({ storeUrl }).select(
         'fantasyName ' + 'description ' + 'settings ' + 
         'settingsPayment ' + 'custom ' + 'address ' + 
-        'subscription ' + 'settingsDelivery ' + 'storeUrl'
+        'subscription ' + 'settingsDelivery ' + 'storeUrl ' + 'online'
       ).lean();
 
-      if (!store) {
+      if (!store || !store.online) {
         return res.status(404).json({ success: false, message: 'Cárdapio não encontrado' });
       }
 
       const time = moment().tz('America/Sao_Paulo');
-      const days = [
-        'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
-      ];
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       const openDay = store.settings.openingHours[days[time.day()]];
       const hour = moment(time.format('HH:mm'), 'HH:mm');
 

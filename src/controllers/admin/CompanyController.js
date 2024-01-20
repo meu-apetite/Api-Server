@@ -4,6 +4,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import { upload } from '../../settings/multer.js';
 import { EmailService } from '../../services/EmailService.js';
 import axios from 'axios';
+import OrdersModel from '../../models/OrdersModel.js';
+import moment from 'moment-timezone';
 
 class CompanyController {
   async getCompany(req, res) {
@@ -117,7 +119,7 @@ class CompanyController {
         });
 
         const { custom } = await Model.findById(companyId, 'custom.logo');
-        if (custom.logo.url) await cloudinary.uploader.destroy(id);
+        if (custom.logo.url) await cloudinary.uploader.destroy(custom.logo.id);
 
         const upload = await cloudinary.uploader
           .upload(req.file.path, { folder: companyId });
@@ -327,6 +329,55 @@ class CompanyController {
       return res.status(400).json({ success: false, message: 'Não foi possível verificar o código.' });
     }
   };
+
+ 
+  getFinancialData = async (req, res) => {
+    try {
+      const companyId = req.headers.companyid;
+      const orders = await OrdersModel.find({ 'company': companyId, 'status.name': 'Concluded' });
+  
+      const filteredOrders = orders.filter(order =>
+        moment(order.date).isSame(req.query.period, 'month')
+      );
+  
+      const totalOrdersPeriod = filteredOrders.length;
+      const totalValuePeriod = filteredOrders.reduce((total, order) => total + order.total, 0);
+      const totalItemsSoldPeriod = filteredOrders.reduce((total, order) => {
+        return total + order.products.reduce((itemTotal, product) => itemTotal + product.quantity, 0);
+      }, 0);
+  
+      const ordersBriefInfo = filteredOrders.map(order => ({
+        id: order.id,
+        date: order.date,
+        client: order.client.name,
+        totalValue: order.total,
+        totalItems: order.products.reduce((itemTotal, product) => itemTotal + product.quantity, 0),
+      }));
+  
+      return res.status(200).json({
+        ordersBriefInfo,
+        totalOrdersPeriod,
+        totalValuePeriod,
+        totalItemsSoldPeriod,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: 'Internal server error. Please check the server logs for more details.' });
+    }
+  }
+  
+
+  groupOrdersByPeriod(orders, period) {
+    const groupedOrders = orders.reduce((result, order) => {
+      const periodKey = moment(order.date).startOf(period).toISOString();
+      result[periodKey] = result[periodKey] || [];
+      result[periodKey].push(order);
+      return result;
+    }, {});
+
+    return Object.values(groupedOrders);
+  }
+
 }
 
 export default CompanyController;

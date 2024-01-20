@@ -2,28 +2,63 @@ import Model from '../../models/OrdersModel.js';
 import { getStatus } from '../../utils/orderStatus.js';
 
 class OrdersController {
-  async  getOrders(req, res) {
+  async getOrders(req, res) {
     const company = req.headers.companyid;
     const page = parseInt(req.query.page) || 1;
     const perPage = 10;
+    const searchTerm = req.query.searchTerm || '';
+    const filter = req.query.filter || '';
+    const startDate = req.query.startDate || null;
+    const endDate = req.query.endDate || null;
+    const selectedStatus = req.query.selectedStatus || '';
   
     try {
-      const totalOrders = await Model.countDocuments({ company });
+      let query = { company };
+  
+      if (searchTerm) {
+        query = {
+          ...query,
+          $or: [
+            { 'client.name': { $regex: searchTerm, $options: 'i' } },
+            { id: isNaN(searchTerm) ? -1 : parseInt(searchTerm) } 
+          ]
+        };
+      }
+  
+      if (startDate && endDate) {
+        query.date = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate + 'T23:59:59.999Z') 
+        };
+      } else if (startDate) {
+        query.date = {
+          $gte: new Date(startDate),
+          $lte: new Date(startDate + 'T23:59:59.999Z')  // Fim do dia
+        };
+      } else if (endDate) {
+        query.date = { $lte: new Date(endDate + 'T23:59:59.999Z') };  // Fim do dia
+      }
+      
+      if (selectedStatus) {
+        query['status.name'] = selectedStatus;
+      }
+  
+      const totalOrders = await Model.countDocuments(query);
       const totalPages = Math.ceil(totalOrders / perPage);
   
-      const orders = await Model.find({ company })
-        .sort({ date: -1 }) 
+      const orders = await Model.find(query)
+        .sort({ date: -1 })
         .skip((page - 1) * perPage)
         .limit(perPage)
         .exec();
   
       return res.status(200).json({ orders, totalPages, page });
     } catch (error) {
-      console.log(error);
-      return res.status(500).json({ error: 'Erro ao obter os produtos.' });
+      console.error(error);
+      return res.status(500).json({ error: 'Erro ao obter os pedidos.' });
     }
   }
-
+  
   async updateOrderStatus(req, res) {
     const company = req.headers.companyid;
     const { orderId, status } = req.body;
