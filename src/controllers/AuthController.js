@@ -1,9 +1,10 @@
+import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
 import Model from '../models/CompanyModel.js';
 import Validation from '../utils/Validation.js';
 const checkValidation = new Validation();
+
 dotenv.config();
 
 class Auth {
