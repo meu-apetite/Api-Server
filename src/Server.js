@@ -14,7 +14,7 @@ class Server {
     this.config();
     this.route();
 
-    this.app.listen(this.PORT, console.log('on test port ', this.PORT))
+    this.app.listen(this.PORT, console.log('on'))
   }
 
   config() {
