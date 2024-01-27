@@ -234,10 +234,10 @@ class CompanyController {
       const company = await Model.findOneAndUpdate(
         { _id: companyId },
         { $set: { address: updateAddress } },
-        { new: true }
+        { new: true, projection: { address: 1, _id: 0 } }
       );
 
-      return res.status(200).json(company);
+      return res.status(200).json(company.address);
     } catch (error) {
       console.error(error);
     }
