@@ -129,7 +129,7 @@ class CategoriesController {
     }
   }
 
-  async update(req, res) {
+  update = async (req, res) => {
     try {
       const company = req.headers.companyid;
       const data = req.body;
@@ -152,6 +152,7 @@ class CategoriesController {
 
       res.status(200).json(categories);
     } catch (error) {
+      console.log(error)
       return res.status(400).json({
         success: false,
         message: 'Não foi possível editar a categoria',

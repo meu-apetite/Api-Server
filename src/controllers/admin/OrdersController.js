@@ -7,10 +7,9 @@ class OrdersController {
     const page = parseInt(req.query.page) || 1;
     const perPage = 10;
     const searchTerm = req.query.searchTerm || '';
-    const filter = req.query.filter || '';
     const startDate = req.query.startDate || null;
     const endDate = req.query.endDate || null;
-    const selectedStatus = req.query.selectedStatus || '';
+    const selectedStatus = req.query.status || '';
   
     try {
       let query = { company };
@@ -33,19 +32,16 @@ class OrdersController {
       } else if (startDate) {
         query.date = {
           $gte: new Date(startDate),
-          $lte: new Date(startDate + 'T23:59:59.999Z')  // Fim do dia
+          $lte: new Date(startDate + 'T23:59:59.999Z') 
         };
       } else if (endDate) {
-        query.date = { $lte: new Date(endDate + 'T23:59:59.999Z') };  // Fim do dia
+        query.date = { $lte: new Date(endDate + 'T23:59:59.999Z') }; 
       }
       
-      if (selectedStatus) {
-        query['status.name'] = selectedStatus;
-      }
-  
+      if (selectedStatus) query['status.name'] = selectedStatus;
+
       const totalOrders = await Model.countDocuments(query);
       const totalPages = Math.ceil(totalOrders / perPage);
-  
       const orders = await Model.find(query)
         .sort({ date: -1 })
         .skip((page - 1) * perPage)
@@ -78,19 +74,7 @@ class OrdersController {
 
       return res.status(200).json({ success: true, message: 'Pedido atualizado.' });
     } catch (error) {
-      console.error(error);
       return res.status(500).json({ error: 'Erro ao atualizar o status do pedido.' });
-    }
-  }
-
-  async getOrdersdashboard(req, res) {
-    try {
-      const company = req.headers.companyid;
-      const orders = await Model.find({ company });
-      return res.status(200).json(orders);
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
 }

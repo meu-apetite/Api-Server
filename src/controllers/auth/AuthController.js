@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import Model from '../models/CompanyModel.js';
-import Validation from '../utils/Validation.js';
-const checkValidation = new Validation();
+import Model from '../../models/CompanyModel.js';
+import { ValidationUtils } from '../../utils/ValidationUtils.js';
 
 class Auth {
   async register(req, res) {
@@ -11,8 +10,8 @@ class Auth {
       const messages = [];
 
       Object.keys(data).forEach((item) => {
-        if (!checkValidation[item]) return;
-        const validation = checkValidation[item](data[item]);
+        if (!ValidationUtils[item]) return;
+        const validation = ValidationUtils[item](data[item]);
         if (validation !== true) messages.push(validation);
       });
 
@@ -61,7 +60,7 @@ class Auth {
       const data = { ...req.body };
       
       //Validation
-      if (!checkValidation.email(data.email.trim())) {
+      if (!ValidationUtils.email(data.email.trim())) {
         return res.status(401).json({ 
           success: false, message: 'Email inválido!' 
         });
@@ -86,7 +85,7 @@ class Auth {
       const token = jwt.sign(
         { id: company._id, email: company.email },
         process.env.TOKEN_KEY,
-        { expiresIn: '2h' }
+        { expiresIn: '200d' }
       );
 
       return res.status(200).json({ 

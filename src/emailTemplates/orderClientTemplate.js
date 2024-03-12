@@ -1,5 +1,4 @@
-export default function(order) {
-  console.log(order)
+export default function(order, company) {
 	return `
   <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -46,10 +45,11 @@ export default function(order) {
         <!-- LOGO -->
         <!-- Image text color should be opposite to background color. Set your url, image src, alt and title. Alt text should fit the image size. Real image size should be x2. URL format: http://domain.com/?utm_source={{Campaign-Source}}&utm_medium=email&utm_content=logo&utm_campaign={{Campaign-Name}} -->
         <a target="_blank" style="text-decoration: none;"
-          href="https://github.com/konsav/email-templates/"><img border="0" vspace="0" hspace="0"
-          src="https://raw.githubusercontent.com/konsav/email-templates/master/images/logo-black.png"
-          width="100" height="30"
+          href=""><img border="0" vspace="0" hspace="0"
+          src="${company.custom?.logo?.url}"
+          width="80" height="80"
           alt="Logo" title="Logo" style="
+          object-fit: "cover";
           color: #000000;
           font-size: 10px; margin: 0; padding: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; border: none; display: block;" /></a>
       </td>
@@ -62,36 +62,44 @@ export default function(order) {
     <!-- HEADER -->
     <tr>
       <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; font-size: 24px; font-weight: bold; line-height: 130%; padding-top: 25px; color: #000000; font-family: sans-serif;" class="header">
-        ${order.client.name} - #${order.id}
-      </td>
+        ${company.fantasyName.toUpperCase()} <br />
+        <small>Pedido - #${order.id}</small>
+      </td> 
     </tr>
   
     <!-- PARAGRAPH -->
     <tr>
       <td align="left" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 100%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 25px; color: #000000; font-family: sans-serif;" class="paragraph">
-        <strong>Nome: </strong>${order.client.name} <br />
-        <strong>Telefone: </strong>${order.client.phoneNumber} <br />
-        <strong>Email: </strong>${order.client.email} <br />
+        <strong>Whatsapp: </strong>${company.whatsapp} <br />
+        <strong>Email: </strong>${company.email} <br />
         ${
           order.deliveryType === 'delivery' 
-          ? `<strong>Endereço:</strong> ${order?.address.street?.length ? `${order.address.street}, ${order.address.number}, ${order.address.district}, ${order.address.city}` : 'Não informado'} <br />`
-          : ''
+          ? `<strong>Endereço de entrega:</strong> ${order.address.street}, ${order.address.number}, ${order.address.district}, ${order.address.city}`
+          : `<strong>Endereço de retirada:</strong> ${company.address.street}, ${company.address.number}, ${company.address.district}, ${company.address.city}`
         }
-        **Pedido para ${(order.deliveryType === 'delivery') ? 'entrega' : 'retirada'} <br />
+        <br />
+        
       </td>
     </tr>
-    
+
     <!-- LINE -->
     <tr>	
       <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%;
-        padding-top: 25px;" class="line"><hr
+        padding-top: 16px;" class="line"><hr
         color="#E0E0E0" align="center" width="100%" size="1" noshade style="margin: 0; padding: 0;" />
+      </td>
+    </tr>
+
+    <tr>
+      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 100%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 16px; padding-bottom: 16px; color: #000000; font-family: sans-serif;" class="paragraph">
+        <h3>Itens pedido</h3>
       </td>
     </tr>
   
     <!-- LIST -->
     <tr>
-      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%;" class="list-item"><table align="center" border="0" cellspacing="0" cellpadding="0" style="width: inherit; margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
+      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%;  text-align: start;" class="list-item">
+        <table align="center" border="0" cellspacing="0" cellpadding="0" style="width: inherit; margin: 0; padding: 0; border-collapse: collapse; border-spacing: 0;">
       <!-- LIST ITEM -->
       ${order.products.map(item => `
         <tr>
@@ -103,44 +111,56 @@ export default function(order) {
             <b style='color: #333333;'>${item.productName}</b><br/>
             <strong>Preço: </strong>${item.priceTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} <br />
             <strong>Quantidade: </strong>${item.quantity} <br />
-            ${item?.complements.length ? `<strong style='color: #000;'>Complementos:</strong> ${item?.complements.map((c, i) => `<span style='color: #000;'>${c?.name}</span>${item?.complements.length === (i + 1) ? '' : ', '}`).join('')} <br />` : ''}
+            ${item?.complements.length > 0 ? `<strong style='color: #000;'>Complementos:</strong> ${item?.complements.map((c, i) => `<span style='color: #000;'>${c?.name}</span>${item?.complements.length === (i + 1) ? '' : ', '}`).join('')} <br />` : ''}
+            ${item?.comment.length > 0 ? `<strong style='color: #000;'>Comentário:</strong> ${item.comment}` : ''}
           </td>
         </tr>`
       ).join('')}
       </table></td>
     </tr>
-  
-    <!-- LINE -->
-    <tr>
-      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 100%;
-        padding-top: 25px;" class="line"><hr
+
+
+    <!-- Forma de pagamento -->
+    <tr>	
+      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%;
+        padding-top: 16px;" class="line"><hr
         color="#E0E0E0" align="center" width="100%" size="1" noshade style="margin: 0; padding: 0;" />
       </td>
     </tr>
 
     <tr>
-      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 100%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 16px; padding-bottom: 16px; color: #000000; font-family: sans-serif;" class="paragraph">
-        <strong>Total: ${order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL'  })}</strong>
+      <td valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 100%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 16px; padding-bottom: 16px; color: #000000; font-family: sans-serif;" class="paragraph">
+        ${order.paymentType === "inDelivery" ?
+          `<strong>Pagamento:</strong> Na entrega (ou retirada) <br />` :
+          `<strong>Pagamento:</strong> Online <br />` 
+        }
+        <strong>Método</strong>: <span style="text-transform: capitalize">${order.paymentMethod.id.replace('-', ' ')}</span>  <br />
       </td>
-    </tr>  
+    </tr>
+
+    <tr style="text-align: end;">
+      <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 100%; font-size: 17px; font-weight: 400; line-height: 160%; padding-top: 16px; padding-bottom: 16px; color: #000000; font-family: sans-serif; text-align: end;" class="paragraph">
+          <!-- Verificação e exibição da taxa de entrega -->
+          ${order?.address?.price 
+              ?
+                `<strong>
+                  Taxa de entrega: ${
+                    order.address.deliveryOption === 'customerPickup'
+                      ? 'A combinar'
+                      : order.address.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                  }
+                </strong> <br />
+              ` 
+              : ''
+          }
+          <!-- Exibição do subtotal -->
+          <strong>Subtotal: ${order.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong><br />
+          <!-- Exibição do total -->
+          <strong>Total: ${order.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong>
+      </td>
+    </tr>
   </table>
   
-  <!-- BUTTON -->
-  <tr>
-    <td align="center" valign="top" style="border-collapse: collapse; border-spacing: 0; margin: 0; padding: 0; padding-left: 6.25%; padding-right: 6.25%; width: 87.5%; padding-top: 15px; padding-bottom: 15px;" class="button">
-      <a href="https://github.com/konsav/email-templates/" target="_blank" style="text-decoration: underline;">
-        <table border="0" cellpadding="0" cellspacing="0" align="center" style="max-width: 240px; min-width: 120px; border-collapse: collapse; border-spacing: 0; padding: 0;">
-          <tr>
-            <td align="center" valign="middle" style="padding: 12px 24px; margin: 0; text-decoration: underline; border-collapse: collapse; border-spacing: 0; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px;" bgcolor="#E9703E">
-              <a target="_blank" style="text-decoration: underline; color: #FFFFFF; font-family: sans-serif; font-size: 17px; font-weight: 400; line-height: 120%;" href="https://github.com/konsav/email-templates/">
-                Confirmar pedido
-              </a>
-            </td>
-          </tr>
-        </table>
-      </a>
-    </td>
-  </tr>
   </table>
   </td></tr></table>
   </body>

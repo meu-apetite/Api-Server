@@ -9,7 +9,7 @@ class ProductController {
     const page = parseInt(req.query.page) || 1;
     const perPage = 10;
     const searchTerm = req.query.search || '';
-    const filterStatus = req.query.filter || '';
+    const filterStatus = req.query.status || '';
     const filterCategory = req.query.filterCategory || '';
   
     try {
@@ -19,7 +19,7 @@ class ProductController {
         filter.$or = [{ name: { $regex: searchTerm, $options: 'i' } }];
       }
   
-      if (filterStatus) filter.isActive = filterStatus === 'ativo';
+      if (filterStatus) filter.isActive = JSON.parse(filterStatus);
   
       if (filterCategory) filter.category = filterCategory;
   
@@ -28,13 +28,13 @@ class ProductController {
   
       const products = await Model.find(filter)
         .populate('category', 'title')
+        .populate({ path: 'complements' })
         .skip((page - 1) * perPage)
         .limit(perPage)
         .exec();
   
       return res.status(200).json({ products, totalPages, page });
     } catch (error) {
-      console.error(error);
       return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
@@ -126,7 +126,6 @@ class ProductController {
 
         res.status(200).json({ success: true, message: 'Produto criado!' });
       } catch (error) {
-        console.log(error)
         if (productCreate) {
           await Model.findByIdAndDelete(productCreate._id);
 
@@ -154,26 +153,28 @@ class ProductController {
             success: false, message: 'Nome não pode ficar em branco'
           });
         }
+
         if (Number(data.price) == NaN) {
           return res.status(400).json({
             success: false, message: 'Preço inválido'
           });
         }
+
         if (typeof (Number(data.price)) !== 'number') {
           return res.status(400).json({
             success: false, message: 'Preço inválido'
           });
         }
+        
         if (data.images?.length <= 0 && req.files.length <= 0) {
           return res.status(400).json({
-            success: false, message: 'É preciso enviar a foto do produto'
+            success: false, 
+            message: 'É preciso enviar a foto do produto'
           });
         }
      
         if (req.files.length) {
-          //remove
           await cloudinary.uploader.destroy(data.imageId);
-          //new image
           const result = await cloudinary.uploader.upload(req.files[0].path, { folder: company });
           updateData.images = [{ id: result.public_id, url: result.url }];
         }
@@ -195,7 +196,10 @@ class ProductController {
         res.status(200).json({ success: true, message: 'Produto atualizado.' });
       } catch (error) {
         console.log(error);
-        return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Falha na requisição, tente novamente mais tarde' 
+        });
       }
     });
   }
@@ -254,9 +258,7 @@ class ProductController {
     const { imageId, productId } = req.params;
 
     try {
-      cloudinary.uploader.destroy(imageId, function (error, result) {
-        console.log(result, error);
-      });
+      cloudinary.uploader.destroy(imageId, (error, result) => console.log(result, error));
 
       const product = await Model.findByIdAndUpdate(
         productId,

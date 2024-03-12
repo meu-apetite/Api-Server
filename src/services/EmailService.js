@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
-import orderTemplate from './emailTemplates/orderTemplate.js';
-import codeTemplate from './emailTemplates/codeTemplate.js';
+import orderTemplate from '../emailTemplates/orderTemplate.js';
+import codeTemplate from '../emailTemplates/codeTemplate.js';
+import orderClientTemplate from '../emailTemplates/orderClientTemplate.js';
 
 export class EmailService {
   #userEmail = 'gnerisdev@gmail.com';
@@ -32,12 +33,13 @@ export class EmailService {
     });
   }
 
-  sendEmailOrder = (mailOptions, order) => {
+  sendEmailOrder = (mailOptions, order, company = null) => {
+    const renderHtml = company ? orderClientTemplate(order, company) : orderTemplate(order);
     const data = { 
       from: this.#userEmail, 
       to: mailOptions.to, 
       subject: mailOptions.subject,
-      html: orderTemplate(order)
+      html: renderHtml
     };
 
     const transporter = this.getTransporter();

@@ -5,8 +5,6 @@ class ComplementsController {
 
     try {
       const errors = [];
-
-      console.log(data)
   
       data.forEach((item, index) => {
         const options = [...item.options];
@@ -29,7 +27,9 @@ class ComplementsController {
             item.name
           );
         }
-  
+
+        console.log(data[index])
+        delete data[index]['_id'];
         data[index]['company'] = company;
       });
   
@@ -62,6 +62,8 @@ class ComplementsController {
           if (item?.max <= 0) errors.push('Quantidade máxima deve ser igual ou maior que 1');
         }
 
+        if (options.length < 1) errors.push('Opções de completo vazia');;
+
         options.forEach((option, i) => {
           if (!option?.name.trim().length) optionErrors++;
         });
@@ -73,6 +75,7 @@ class ComplementsController {
         );
 
         data[index]['company'] = companyId;
+        delete data[index]['_id'];
       });
 
       if (errors.length) return res.status(200).json({ success: false, message: errors.join('. \n ') });
@@ -85,7 +88,6 @@ class ComplementsController {
 
       return res.status(200).json(ids);
     } catch (error) {
-      console.log(error);
       return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
     }
   }

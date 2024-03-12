@@ -6,7 +6,6 @@ export class NotificationService {
   #endpoint;
   #keys;
 
-
   constructor(endpoint, keys) {
     this.#endpoint = endpoint;
     this.#keys = keys;
@@ -15,17 +14,22 @@ export class NotificationService {
   send = async (title, body) => {
     try {
       const subscription = { endpoint: this.#endpoint, keys: this.#keys };
-      webpush.setVapidDetails('mailto:gnerisdev@email.com', this.#publicKey, this.#privateKey);
+      webpush.setVapidDetails(
+        'mailto:gnerisdev@email.com',
+        this.#publicKey,
+        this.#privateKey
+      );
 
       const payload = JSON.stringify({
         title: title,
         body: body,
-        image: 'https://fastly.picsum.photos/id/481/200/300.jpg?hmac=mlbIyGYg8TMyId9tAwMZz1VppVzNObkpL0cVVxnjTVo'
-      });      
+        image:
+          'https://fastly.picsum.photos/id/481/200/300.jpg?hmac=mlbIyGYg8TMyId9tAwMZz1VppVzNObkpL0cVVxnjTVo',
+      });
       const response = await webpush.sendNotification(subscription, payload);
       return response;
     } catch (error) {
-      console.log(error);
+      throw new Error(error);
     }
   };
 }

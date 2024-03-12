@@ -24,6 +24,7 @@ export class PixService {
   }
 
   _getValue(id, value) {
+    console.log('value')
     const size = String(value.length).padStart(2, "0");
     return id + size + value;
   }

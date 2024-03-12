@@ -1,11 +1,11 @@
 import Model from '../../models/CompanyModel.js';
-import { methodInCategory } from "../../utils/fetchPaymentMethods.js";
+import { METHODCATEGORY } from '../../constant/methods.js';
 
 
 class PaymentsController {
   getMethodInCategory = async (req, res) => {
     try {
-      return res.status(200).json(methodInCategory);
+      return res.status(200).json(METHODCATEGORY);
     } catch (error) {
       console.log(error);
     }
@@ -70,7 +70,7 @@ class PaymentsController {
 
       await Model.findByIdAndUpdate(companyId, { $set: { 'settingsPayment.pix': { key, keyType, active, name, city } } });
 
-      return res.status(200).json({ key, keyType, active });
+      return res.status(200).json({ key, keyType,  name, city, active });
     } catch (error) {
       console.log(error);
       return res.status(400).json({ success: false });

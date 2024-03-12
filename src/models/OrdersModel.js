@@ -1,5 +1,7 @@
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
+import { cartSchema } from './CartModel.js';
+
 const { Schema } = mongoose;
 
 const ordersSchema = new Schema({
@@ -9,11 +11,6 @@ const ordersSchema = new Schema({
     ref: 'companies',
     require: true,
   },
-  client: {
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phoneNumber: { type: String, required: true },
-  },
   status: {
     type: {
       name: { type: String, required: true },
@@ -21,46 +18,23 @@ const ordersSchema = new Schema({
     },
     required: true
   },
-  products: [{ 
-    complements: [], 
-    productId: String,
-    productName: String,
-    quantity: Number,
-    imageUrl: String,
-    priceTotal: Number
-  }],
   paymentType: {
     type: String,
-    enum: ['online', 'indelivery', 'pix'],
+    enum: ['online', 'inDelivery', 'pix'],
     required: true
   },
   paymentMethod: {
     type: { icon: String, id: String, title: String, _id: String },
     required: true
   },
-  deliveryType: {
-    type: String,
-    enum: ['pickup', 'delivery'],
-    required: true
-  },
-  address: {
-    destination: { latitude: Number, longitude: Number },
-    distance: Number,
-    price: Number,
-    number: String,
-    street: String,
-    district: String,
-    city: String,
-    freeformAddress: String
-  },
   date: { type: Date, default: () => moment().tz('America/Sao_Paulo') },
-  total: Number
 });
 
+const ordersModel = new Schema({ ...cartSchema.obj, ...ordersSchema.obj });
 
-ordersSchema.pre('save', function(next) {
+ordersModel.pre('save', function(next) {
   const doc = this;
-  mongoose.model('Orders', ordersSchema, 'orders').findOne({}, {}, { sort: { 'id': -1 } }).exec(function(err, result) {
+  mongoose.model('Orders', ordersModel, 'orders').findOne({}, {}, { sort: { 'id': -1 } }).exec(function(err, result) {
     let lastId = 0;
     if (result && result.id) lastId = result.id;
     doc.id = lastId + 1;
@@ -68,4 +42,4 @@ ordersSchema.pre('save', function(next) {
   });
 });
 
-export default mongoose.model('orders', ordersSchema);
+export default mongoose.model('orders', ordersModel);

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { allMethods } from '../utils/fetchPaymentMethods.js';
+import { METHODS } from '../constant/methods.js';
+
 const { Schema } = mongoose;
 
 const companySchema = new Schema({
@@ -25,7 +26,7 @@ const companySchema = new Schema({
     reference: { type: String, trim: true },
     street: { type: String, trim: true },
     district: { type: String, trim: true },
-    zipCode: { type: String, maxLength: 8 },
+    zipCode: { type: String, maxLength: 9 },
     coordinates: { latitude: Number, longitude: Number },
     freeformAddress: { type: String, trim: true },
   },
@@ -33,6 +34,7 @@ const companySchema = new Schema({
     colorPrimary: { type: String, default: '#800080' },
     colorSecondary: { type: String, default: '#00FF00' },
     logo: { url: String, id: String },
+    backgroundImage: { url: String, id: String },
     gallery: [{ url: String, id: String }],
   },
   subscription: { endpoint: String, keys: { p256dh: String, auth: String } },
@@ -84,8 +86,15 @@ const companySchema = new Schema({
   },
   settingsPayment: {
     methods: {
-      type: [{ id: String, title: String, parent: String }],
-      default: allMethods,
+      type: [
+        { 
+          id: String, 
+          title: String, 
+          parent: String,
+          image: String 
+        }
+    ],
+      default: METHODS,
     },
     mercadoPago: { active: Boolean, publicKey: String, accessToken: String },
     pix: {

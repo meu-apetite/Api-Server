@@ -1,11 +1,7 @@
+import axios from 'axios';
 import Model from '../../models/CompanyModel.js';
 import VerificationCodesModel from '../../models/VerificationCodesModel.js';
-import { v2 as cloudinary } from 'cloudinary';
-import { upload } from '../../settings/multer.js';
 import { EmailService } from '../../services/EmailService.js';
-import axios from 'axios';
-import OrdersModel from '../../models/OrdersModel.js';
-import moment from 'moment-timezone';
 
 class CompanyController {
   async getCompany(req, res) {
@@ -76,131 +72,6 @@ class CompanyController {
     } catch (error) {
       console.log(error);
       return res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
-    }
-  }
-
-  async updateAppearance(req, res) {
-    try {
-      const companyId = req.headers.companyid;
-      const {
-        fantasyName, 
-        description, 
-        colorPrimary, 
-        colorSecondary,
-        slogan
-      } = req.body;
-
-      const updatedCompany = await Model.findOneAndUpdate(
-        { _id: companyId },
-        {
-          $set: {
-            'custom.colorPrimary': colorPrimary,
-            'custom.colorSecondary': colorSecondary,
-            fantasyName, description, slogan
-          },
-        },
-        { new: true } 
-      );
-      
-      return res.status(200).json(updatedCompany);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  async updateLogo(req, res) {
-    upload.single('logo')(req, res, async (err) => {
-      try {
-        const companyId = req.headers.companyid;
-
-        if (!req.file) return res.status(400).json({ 
-          success: false, 
-          message: 'Não foi possível atualizar o logo' 
-        });
-
-        const { custom } = await Model.findById(companyId, 'custom.logo');
-        if (custom.logo.url) await cloudinary.uploader.destroy(custom.logo.id);
-
-        const upload = await cloudinary.uploader
-          .upload(req.file.path, { folder: companyId });
-        
-        await Model.findByIdAndUpdate(
-          companyId, { 
-            $set: { 'custom.logo': { url: upload.url, id: upload.public_id } } 
-          }
-        );
-        
-        res.status(200).json({ url: upload.url, id: upload.public_id });
-      } catch (error) {
-        console.log(error)
-        return res.status(400).json({ 
-          success: false, message: 'Erro ao atualizar a logo' 
-        });
-      }
-    });
-  }
-
-  async removeImageLogo(req, res) {
-    try {
-      const companyId = req.headers.companyid;
-      const { id } = req.params;
-
-      const result = await cloudinary.uploader.destroy(id);
-      await Model.findByIdAndUpdate(companyId, { $set: { 'custom.logo': null } });
-
-      return res.status(200).json({ success: true, message: 'Logo excluída' });
-    } catch (error) {
-      return res.status(400).json({ success: false, message: 'Não foi possivel excluir logo' });
-    }
-  }
-
-  async addImageGallery(req, res) {
-    upload.single('image')(req, res, async (err) => {
-      try {
-        const companyId = req.headers.companyid;
-        let image;
-
-        if (req.file) {
-          const upload = await cloudinary.uploader.upload(req.file.path, { folder: companyId });
-          image = { url: upload.url, id: upload.public_id };
-        }
-
-        if (!image) {
-          res.status(400).json({ success: false, message: 'Não foi possível atualizar a galeria' });
-          return;
-        }
-
-        const company = await Model.findByIdAndUpdate(
-          companyId,
-          { $push: { 'custom.gallery': { $each: [image] } } },
-          { new: true }
-        );
-
-        res.status(200).json(company.custom.gallery);
-      } catch (error) {
-        console.log(error);
-        return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
-      }
-    });
-  }
-
-  async removeImageGallery(req, res) {
-    try {
-      const companyId = req.headers.companyid;
-      const { id } = req.params;
-
-      await cloudinary.uploader.destroy(id);
-
-      const company = await Model.findOneAndUpdate(
-        { _id: companyId },
-        { $pull: { 'custom.gallery': { id } } },
-        { new: true }
-      );
-
-      res.status(200).json(company.custom.gallery);
-    } catch (error) {
-      console.log(error);
-      return res.status(400).json({ success: false, message: 'Não foi possivel excluir logo' });
     }
   }
 
@@ -329,55 +200,6 @@ class CompanyController {
       return res.status(400).json({ success: false, message: 'Não foi possível verificar o código.' });
     }
   };
-
- 
-  getFinancialData = async (req, res) => {
-    try {
-      const companyId = req.headers.companyid;
-      const orders = await OrdersModel.find({ 'company': companyId, 'status.name': 'Concluded' });
-  
-      const filteredOrders = orders.filter(order =>
-        moment(order.date).isSame(req.query.period, 'month')
-      );
-  
-      const totalOrdersPeriod = filteredOrders.length;
-      const totalValuePeriod = filteredOrders.reduce((total, order) => total + order.total, 0);
-      const totalItemsSoldPeriod = filteredOrders.reduce((total, order) => {
-        return total + order.products.reduce((itemTotal, product) => itemTotal + product.quantity, 0);
-      }, 0);
-  
-      const ordersBriefInfo = filteredOrders.map(order => ({
-        id: order.id,
-        date: order.date,
-        client: order.client.name,
-        totalValue: order.total,
-        totalItems: order.products.reduce((itemTotal, product) => itemTotal + product.quantity, 0),
-      }));
-  
-      return res.status(200).json({
-        ordersBriefInfo,
-        totalOrdersPeriod,
-        totalValuePeriod,
-        totalItemsSoldPeriod,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ success: false, message: 'Internal server error. Please check the server logs for more details.' });
-    }
-  }
-  
-
-  groupOrdersByPeriod(orders, period) {
-    const groupedOrders = orders.reduce((result, order) => {
-      const periodKey = moment(order.date).startOf(period).toISOString();
-      result[periodKey] = result[periodKey] || [];
-      result[periodKey].push(order);
-      return result;
-    }, {});
-
-    return Object.values(groupedOrders);
-  }
-
 }
 
 export default CompanyController;
