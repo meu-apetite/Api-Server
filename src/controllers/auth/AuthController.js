@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import Model from '../../models/CompanyModel.js';
 import { ValidationUtils } from '../../utils/ValidationUtils.js';
+import { TOKEN_KEY } from '../../environments/index.js';
 
 class Auth {
   async register(req, res) {
@@ -84,7 +85,7 @@ class Auth {
 
       const token = jwt.sign(
         { id: company._id, email: company.email },
-        process.env.TOKEN_KEY,
+        TOKEN_KEY,
         { expiresIn: '200d' }
       );
 

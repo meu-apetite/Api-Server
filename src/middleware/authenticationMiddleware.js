@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-dotenv.config();
+import { TOKEN_KEY } from "../environments/index.js";
 
 const authenticationMiddleware = (req, res, next) => {
   const authorizationHeader = req.headers['authorization'];
@@ -8,7 +7,7 @@ const authenticationMiddleware = (req, res, next) => {
   if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
     const token = authorizationHeader.substring(7);
     try {
-      jwt.verify(token, process.env.TOKEN_KEY);
+      jwt.verify(token, TOKEN_KEY);
       next();
     } catch (err) {
       return res.status(401).json({ success: false, message: 'Token inválido' });

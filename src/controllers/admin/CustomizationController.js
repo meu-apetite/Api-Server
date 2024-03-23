@@ -1,5 +1,7 @@
+import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { upload } from '../../settings/multer.js';
+import Model from '../../models/CompanyModel.js';
 
 class CustomizationController {
   async updateAppearance(req, res) {
@@ -51,6 +53,8 @@ class CustomizationController {
           $set: { 'custom.logo': { url: upload.url, id: upload.public_id } },
         });
 
+        fs.unlink(req.file.path, (err) => { });
+
         res.status(200).json({ url: upload.url, id: upload.public_id });
       } catch (error) {
         return res.status(400).json({
@@ -87,11 +91,14 @@ class CustomizationController {
           $set: { 'custom.backgroundImage': { url: upload.url, id: upload.public_id } },
         });
 
+        fs.unlink(req.file.path, (err) => { });
+  
         res.status(200).json({ url: upload.url, id: upload.public_id });
       } catch (error) {
+        console.log(error)
         return res
           .status(400)
-          .json({ success: false, message: 'Erro ao atualizar a logo' });
+          .json({ success: false, message: 'Erro ao atualizar a imagem de fundo' });
       }
     });
   }

@@ -80,22 +80,31 @@ class ProductController {
             message: 'Nome não pode ficar em branco'
           });
         }
+
         if (isNaN(price)) {
           return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
+
         if (typeof (Number(price)) !== 'number') {
           return res.status(400).json({ success: false, message: 'Preço inválido' });
         }
+
         if (req.files.length <= 0) {
           return res.status(400).json({ success: false, message: 'É preciso enviar a foto do ptoduto' });
         }
+
         if (req.files.length) {
           const uploadPromises = req.files.map(file => {
-            return cloudinary.uploader.upload(file.path, { folder: company });
+            cloudinary.uploader.upload(file.path, { folder: company });
+            fs.unlink(file.path, (err) => { });
+            return;
           });
+
           const uploads = await Promise.all(uploadPromises);
+
           uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
         }
+        
         if (!category) {
           return res.status(400).json({ success: false, message: 'É preciso selecionar a categoria' });
         }
