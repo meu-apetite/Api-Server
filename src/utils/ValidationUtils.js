@@ -6,17 +6,17 @@ export class ValidationUtils {
 
   static password(value) {
     //Minimum eight characters, at least one letter and one number:
-    return this.validationPassword.test(value)
+    return validationPassword.test(value)
       ? true
       : 'A senha precisa ter no mínimo 8 caracteres, pelo menos uma letra e um número.';
   }
 
   static email(value) {
-    return this.validationEmail.test(value) ? true : 'Email inválido.';
+    return validationEmail.test(value) ? true : 'Email inválido.';
   }
 
   static whatsapp(value) {
-    return this.validationWhatsapp.test(value) ? true : 'Whatsapp inválido.';
+    return validationWhatsapp.test(value) ? true : 'Whatsapp inválido.';
   }
 
   static ownerName(value) {
