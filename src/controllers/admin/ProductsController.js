@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import Model from '../../models/ProductsModel.js';
 import { upload } from '../../settings/multer.js';
@@ -59,6 +60,7 @@ class ProductController {
     let productCreate = null;
 
     upload.array('images')(req, res, async (err) => {
+      console.log(err)
       try {
         const company = req.headers.companyid;
         let {
@@ -70,7 +72,7 @@ class ProductController {
           discountPrice,
           isActive,
           category,
-          complements
+          complements 
         } = req.body;
         const images = [];
 
@@ -95,18 +97,26 @@ class ProductController {
 
         if (req.files.length) {
           const uploadPromises = req.files.map(file => {
-            cloudinary.uploader.upload(file.path, { folder: company });
-            fs.unlink(file.path, (err) => { });
-            return;
+            return new Promise((resolve, reject) => {
+              cloudinary.uploader.upload(file.path, { folder: company }, (error, result) => {
+                error ? reject(error) : resolve(result);
+              });
+            });
           });
 
+          
           const uploads = await Promise.all(uploadPromises);
-
+          
           uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
+          
+          req.files.map(file => fs.unlink(file.path, (err) => { }));
         }
         
         if (!category) {
-          return res.status(400).json({ success: false, message: 'É preciso selecionar a categoria' });
+          return res.status(400).json({ 
+            success: false, 
+            message: 'É preciso selecionar a categoria' 
+          });
         }
 
         const productLast = await Model.findOne({ category })

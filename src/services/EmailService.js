@@ -1,16 +1,19 @@
 import nodemailer from 'nodemailer';
-import orderTemplate from '../emailTemplates/orderTemplate.js';
-import codeTemplate from '../emailTemplates/codeTemplate.js';
-import orderClientTemplate from '../emailTemplates/orderClientTemplate.js';
+import orderTemplate from '../emails/orderTemplate.js';
+import codeTemplate from '../emails/codeTemplate.js';
+import orderClientTemplate from '../emails/orderClientTemplate.js';
+import { EMAIL_ROOT, EMAIL_ROOT_PASS } from '../environments/index.js';
 
 export class EmailService {
-  #userEmail = 'gnerisdev@gmail.com';
-  #passEmail = 'arlh ukcb avre jnjs';
-  #serviceEmail = 'gmail';
+  #userEmail = EMAIL_ROOT;
+  #passEmail = EMAIL_ROOT_PASS;
 
   getTransporter = () => {
     return nodemailer.createTransport({
-      service: this.#serviceEmail, auth: { user: this.#userEmail, pass: this.#passEmail }
+      host: 'smtp.zoho.com',
+      port: 465,
+      secure: true, 
+      auth: { user: this.#userEmail, pass: this.#passEmail }
     });
   }
 
@@ -36,20 +39,16 @@ export class EmailService {
   sendEmailOrder = (mailOptions, order, company = null) => {
     const renderHtml = company ? orderClientTemplate(order, company) : orderTemplate(order);
     const data = { 
-      from: this.#userEmail, 
+      from: `Pedido ${this.#userEmail}`, 
       to: mailOptions.to, 
       subject: mailOptions.subject,
       html: renderHtml
     };
 
-    const transporter = this.getTransporter();
+    const transporter = this.getTransporter('delivery');
 
     transporter.sendMail(data, function (error, info) {
-      if (error) {
-        console.error(error);
-      } else {
-        console.log("E-mail enviado com sucesso: " + info.response);
-      }
+      error ? console.error(error) : console.log(info.response);
     });
   }
 

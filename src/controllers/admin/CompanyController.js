@@ -173,7 +173,7 @@ class CompanyController {
 
       await new EmailService().sendCode(
         { to: company.email, subject: 'Código de verificação' },
-        code, company.name
+        code, company.fantasyName
       );
 
       return res.status(200).json({ success: true, message: 'Código enviado!' });

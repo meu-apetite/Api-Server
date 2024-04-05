@@ -52,9 +52,9 @@ export class CartController {
 
       estimate.total = estimate.subtotal;
 
-      if (cart?._id) {
-        const cartFind = await CartModel.findById(cart._id).lean();
+      const cartFind = await CartModel.findById(cart?._id).lean();
 
+      if (cartFind?._id) {
         if (
           company.settingsDelivery.deliveryOption === 'fixed' 
           && cartFind && cartFind.address
@@ -283,10 +283,10 @@ export class CartController {
           await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
         }
 
-        // await new EmailService().sendEmailOrder(
-        //   { to: company.email, subject: 'Novo pedido!' },
-        //   order
-        // );
+        await new EmailService().sendEmailOrder(
+          { to: company.email, subject: 'Novo pedido!' },
+          order
+        );
 
         await new EmailService().sendEmailOrder(
           { to: order.client.email.trim(), subject: 'Novo pedido!' },
