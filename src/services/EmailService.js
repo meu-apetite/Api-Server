@@ -11,9 +11,11 @@ export class EmailService {
   getTransporter = () => {
     return nodemailer.createTransport({
       host: 'smtp.zoho.com',
+      service: "Zoho",
       port: 465,
-      secure: true, 
-      auth: { user: this.#userEmail, pass: this.#passEmail }
+      secure: false, 
+      auth: { user: this.#userEmail, pass: this.#passEmail },
+      tls: { rejectUnauthorized: false }
     });
   }
 
