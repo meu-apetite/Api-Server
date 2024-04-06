@@ -3,6 +3,7 @@ import orderTemplate from '../emails/orderTemplate.js';
 import codeTemplate from '../emails/codeTemplate.js';
 import orderClientTemplate from '../emails/orderClientTemplate.js';
 import { EMAIL_ROOT, EMAIL_ROOT_PASS } from '../environments/index.js';
+import { LogUtils } from '../utils/LogUtils.js';
 
 export class EmailService {
   #userEmail = EMAIL_ROOT;
@@ -50,7 +51,7 @@ export class EmailService {
     const transporter = this.getTransporter('delivery');
 
     transporter.sendMail(data, function (error, info) {
-      error ? console.error(error) : console.log(info.response);
+      error ? LogUtils.errorLogger(error) : console.log(info.response);
     });
   }
 
