@@ -9,8 +9,14 @@ class CompanyController {
   async getCompany(req, res) {
     const companyId = req.headers.companyid;
     const company = await Model.findById(companyId);
+
+    if (!company) return res.status(404).json({ success: false });
+
     if (!company.online) {
-      if (company.verifyEmail && company.address.zipCode && company.custom.logo?.url?.length > 0) {
+      if (
+        company.verifyEmail && company.address.zipCode 
+        && company.custom.logo?.url?.length > 0
+      ) {
         const updateComapny = await Model.findOneAndUpdate(
           { _id: companyId },
           { $set: { online: true } },
@@ -20,6 +26,7 @@ class CompanyController {
         return res.status(200).json(updateComapny);
       }
     }
+
     return res.status(200).json(company);
   }
 
