@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import Model from '../../models/CompanyModel.js';
 import { ValidationUtils } from '../../utils/ValidationUtils.js';
+import { LogUtils } from '../../utils/LogUtils.js';
 import { TOKEN_KEY } from '../../environments/index.js';
 
 class Auth {
@@ -48,7 +49,7 @@ class Auth {
         success: true, message: 'Cadastro feito com sucesso!' 
       });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       res.status(400).json({ 
         success: false, 
         message: 'Erro: confira os campos e tente novamente.' 
@@ -95,7 +96,7 @@ class Auth {
         token, _id: company._id 
       });
     } catch (error) {
-      console.log(error)
+      LogUtils.errorLogger(error);
       return res
         .status(400)
         .json({ success: false, message: 'Houve um erro de comunicação na rede.' });

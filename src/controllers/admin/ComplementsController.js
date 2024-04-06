@@ -1,4 +1,6 @@
 import Model from '../../models/ComplementsModel.js';
+import { LogUtils } from '../../utils/LogUtils.js';
+
 
 class ComplementsController {
   async createComplement(data, company) {
@@ -28,7 +30,6 @@ class ComplementsController {
           );
         }
 
-        console.log(data[index])
         delete data[index]['_id'];
         data[index]['company'] = company;
       });
@@ -41,7 +42,7 @@ class ComplementsController {
   
       return ids;
     } catch (error) {
-      console.log(error)
+      LogUtils.errorLogger(error);
       throw new Error('Não foi possível criar o complemento');
     }
   }
@@ -133,7 +134,7 @@ class ComplementsController {
 
       return { success: true };
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return { success: false, message: 'Falha na requisição, tente novamente mais tarde' };
     }
   }
@@ -151,7 +152,7 @@ class ComplementsController {
         return res.status(400).json({ success: false, message: updateResult.message });
       }
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false, message: 'Falha na requisição, tente novamente mais tarde' });
     }
   }

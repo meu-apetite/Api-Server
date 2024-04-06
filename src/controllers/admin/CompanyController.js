@@ -2,6 +2,8 @@ import axios from 'axios';
 import Model from '../../models/CompanyModel.js';
 import VerificationCodesModel from '../../models/VerificationCodesModel.js';
 import { EmailService } from '../../services/EmailService.js';
+import { LogUtils } from '../../utils/LogUtils.js';
+
 
 class CompanyController {
   async getCompany(req, res) {
@@ -34,7 +36,7 @@ class CompanyController {
         galleryImages: company.custom.galleryImages,
       });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
     }
   }
 
@@ -47,7 +49,7 @@ class CompanyController {
       );
       return res.status(200).json(company.owner);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
     }
   }
 
@@ -70,7 +72,7 @@ class CompanyController {
   
       return res.status(200).json({ whatsapp, email });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
   }

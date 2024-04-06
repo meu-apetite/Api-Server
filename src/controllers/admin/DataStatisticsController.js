@@ -6,8 +6,6 @@ class DataStatisticsController {
 
   getFinancialData = async (req, res) => {
     try {
-      console.log('orders');
-
       const companyId = req.headers.companyid;
       const period = req.query.period; // Este é o parâmetro adicionado para especificar o período (day, week, month)
 
@@ -35,9 +33,6 @@ class DataStatisticsController {
         'status.name': 'Concluded',
         'date': { $gte: startDate.toDate(), $lte: endDate.toDate() }
       });
-
-      console.log(orders);
-      console.log({ $gte: startDate.toDate(), $lte: endDate.toDate() });
 
       const totalOrdersPeriod = orders.length;
       const totalValuePeriod = orders.reduce((total, order) => total + order.total, 0);

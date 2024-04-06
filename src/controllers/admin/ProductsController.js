@@ -1,7 +1,8 @@
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
-import Model from '../../models/ProductsModel.js';
 import { upload } from '../../settings/multer.js';
+import { LogUtils } from '../../utils/LogUtils.js';
+import Model from '../../models/ProductsModel.js';
 import ComplementsController from './ComplementsController.js';
 
 class ProductController {
@@ -51,7 +52,7 @@ class ProductController {
 
       return res.status(200).json(product);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
@@ -60,7 +61,6 @@ class ProductController {
     let productCreate = null;
 
     upload.array('images')(req, res, async (err) => {
-      console.log(err)
       try {
         const company = req.headers.companyid;
         let {
@@ -214,7 +214,7 @@ class ProductController {
 
         res.status(200).json({ success: true, message: 'Produto atualizado.' });
       } catch (error) {
-        console.log(error);
+        LogUtils.errorLogger(error);
         return res.status(400).json({ 
           success: false, 
           message: 'Falha na requisição, tente novamente mais tarde' 
@@ -253,7 +253,7 @@ class ProductController {
         
       return res.status(200).json({ products });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false, message: 'Erro ao produto' });
     }
   }
@@ -268,7 +268,7 @@ class ProductController {
 
       return res.status(200).send({ status: 'success' });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).send({ status: 'error' });
     }
   }
