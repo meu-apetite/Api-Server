@@ -1,7 +1,9 @@
 import fs from 'fs';
+import Model from '../../models/CompanyModel.js';
 import { v2 as cloudinary } from 'cloudinary';
 import { upload } from '../../settings/multer.js';
-import Model from '../../models/CompanyModel.js';
+import { LogUtils } from '../../utils/LogUtils.js';
+
 
 class CustomizationController {
   async updateAppearance(req, res) {
@@ -27,7 +29,7 @@ class CustomizationController {
 
       return res.status(200).json(updatedCompany);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
     }
   }
 
@@ -95,7 +97,7 @@ class CustomizationController {
   
         res.status(200).json({ url: upload.url, id: upload.public_id });
       } catch (error) {
-        console.log(error)
+        LogUtils.errorLogger(error);
         return res
           .status(400)
           .json({ success: false, message: 'Erro ao atualizar a imagem de fundo' });

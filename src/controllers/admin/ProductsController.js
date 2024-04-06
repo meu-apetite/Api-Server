@@ -1,6 +1,8 @@
+import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
-import Model from '../../models/ProductsModel.js';
 import { upload } from '../../settings/multer.js';
+import { LogUtils } from '../../utils/LogUtils.js';
+import Model from '../../models/ProductsModel.js';
 import ComplementsController from './ComplementsController.js';
 
 class ProductController {
@@ -50,7 +52,7 @@ class ProductController {
 
       return res.status(200).json(product);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }
@@ -70,7 +72,7 @@ class ProductController {
           discountPrice,
           isActive,
           category,
-          complements
+          complements 
         } = req.body;
         const images = [];
 
@@ -95,18 +97,26 @@ class ProductController {
 
         if (req.files.length) {
           const uploadPromises = req.files.map(file => {
-            cloudinary.uploader.upload(file.path, { folder: company });
-            fs.unlink(file.path, (err) => { });
-            return;
+            return new Promise((resolve, reject) => {
+              cloudinary.uploader.upload(file.path, { folder: company }, (error, result) => {
+                error ? reject(error) : resolve(result);
+              });
+            });
           });
 
+          
           const uploads = await Promise.all(uploadPromises);
-
+          
           uploads.map(upload => images.push({ id: upload.public_id, url: upload.url }));
+          
+          req.files.map(file => fs.unlink(file.path, (err) => { }));
         }
         
         if (!category) {
-          return res.status(400).json({ success: false, message: 'É preciso selecionar a categoria' });
+          return res.status(400).json({ 
+            success: false, 
+            message: 'É preciso selecionar a categoria' 
+          });
         }
 
         const productLast = await Model.findOne({ category })
@@ -204,7 +214,7 @@ class ProductController {
 
         res.status(200).json({ success: true, message: 'Produto atualizado.' });
       } catch (error) {
-        console.log(error);
+        LogUtils.errorLogger(error);
         return res.status(400).json({ 
           success: false, 
           message: 'Falha na requisição, tente novamente mais tarde' 
@@ -243,7 +253,7 @@ class ProductController {
         
       return res.status(200).json({ products });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false, message: 'Erro ao produto' });
     }
   }
@@ -258,7 +268,7 @@ class ProductController {
 
       return res.status(200).send({ status: 'success' });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).send({ status: 'error' });
     }
   }

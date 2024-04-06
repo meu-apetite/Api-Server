@@ -1,11 +1,13 @@
-import CompanyModel from '../../models/CompanyModel.js';
-import OrdersModel from '../../models/OrdersModel.js';
-import CartModel from '../../models/CartModel.js';
 import { NotificationService } from '../../services/NotificationService.js';
 import { EmailService } from '../../services/EmailService.js';
 import { MenuService } from '../../services/MenuService.js';
 import { PixService } from '../../services/PixService.js';
+import { LogUtils } from '../../utils/LogUtils.js';
+import CompanyModel from '../../models/CompanyModel.js';
+import OrdersModel from '../../models/OrdersModel.js';
+import CartModel from '../../models/CartModel.js';
 import ProductsModel from '../../models/ProductsModel.js';
+
 
 export class CartController {
   constructor() {
@@ -24,7 +26,7 @@ export class CartController {
 
       return res.status(200).json({ ...updateCart });
     } catch (error) {
-      console.error(error);
+      LogUtils.errorLogger(error);
     }
   };
 
@@ -40,7 +42,7 @@ export class CartController {
 
       return res.status(200).json({ success: true, ...updateCart });
     } catch (error) {
-      console.error(error);
+      LogUtils.errorLogger(error);
     }
   };
 
@@ -52,9 +54,9 @@ export class CartController {
 
       estimate.total = estimate.subtotal;
 
-      if (cart?._id) {
-        const cartFind = await CartModel.findById(cart._id).lean();
+      const cartFind = await CartModel.findById(cart?._id).lean();
 
+      if (cartFind?._id) {
         if (
           company.settingsDelivery.deliveryOption === 'fixed' 
           && cartFind && cartFind.address
@@ -94,7 +96,7 @@ export class CartController {
 
       return res.status(200).json(newCart);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(500).json({ error: 'An error occurred' });
     }
   };
@@ -164,7 +166,7 @@ export class CartController {
         return res.status(200).json(updateCart);
       }
     } catch (error) {
-      console.error(error);
+      LogUtils.errorLogger(error);
     }
   };
 
@@ -200,6 +202,7 @@ export class CartController {
         },
       });
     } catch (error) {
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false });
     }
   };
@@ -283,10 +286,10 @@ export class CartController {
           await notificationService.send('Novo pedido!', 'Você tem um novo pedido');
         }
 
-        // await new EmailService().sendEmailOrder(
-        //   { to: company.email, subject: 'Novo pedido!' },
-        //   order
-        // );
+        await new EmailService().sendEmailOrder(
+          { to: company.email, subject: 'Novo pedido!' },
+          order
+        );
 
         await new EmailService().sendEmailOrder(
           { to: order.client.email.trim(), subject: 'Novo pedido!' },
@@ -294,12 +297,12 @@ export class CartController {
           company
         );
       } catch (error) {
-        console.log(error);
+        LogUtils.errorLogger(error);
       }
 
       res.status(200).json(order);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({
         success: false,
         message: 'Erro ao finalizar o pedido',

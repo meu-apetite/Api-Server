@@ -1,6 +1,7 @@
+import mongoose from 'mongoose';
 import Model from '../../models/CategoriesModel.js';
 import ProductsModel from '../../models/ProductsModel.js';
-import mongoose from 'mongoose';
+import { LogUtils } from '../../utils/LogUtils.js';
 
 /**
  * Interface
@@ -152,7 +153,7 @@ class CategoriesController {
 
       res.status(200).json(categories);
     } catch (error) {
-      console.log(error)
+      LogUtils.errorLogger(error);
       return res.status(400).json({
         success: false,
         message: 'Não foi possível editar a categoria',

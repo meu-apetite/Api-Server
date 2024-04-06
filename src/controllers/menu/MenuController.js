@@ -4,6 +4,7 @@ import CompanyModel from '../../models/CompanyModel.js';
 import OrdersModel from '../../models/OrdersModel.js';
 import CategoriesModel from '../../models/CategoriesModel.js';
 import { MenuService } from '../../services/MenuService.js';
+import { LogUtils } from '../../utils/LogUtils.js';
 
 
 export class MenuController {
@@ -60,7 +61,7 @@ export class MenuController {
 
       return res.status(200).json(productsWithCategories);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
     }
   }
 
@@ -138,7 +139,7 @@ export class MenuController {
 
       return res.status(200).json({ order, company });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(500).json({ error: 'Erro ao obter os produtos.' });
     }
   }

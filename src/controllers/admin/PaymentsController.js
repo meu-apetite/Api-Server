@@ -1,5 +1,6 @@
 import Model from '../../models/CompanyModel.js';
 import { METHODCATEGORY } from '../../constant/methods.js';
+import { LogUtils } from '../../utils/LogUtils.js';
 
 
 class PaymentsController {
@@ -7,7 +8,7 @@ class PaymentsController {
     try {
       return res.status(200).json(METHODCATEGORY);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
     }
   };
 
@@ -29,7 +30,7 @@ class PaymentsController {
 
       return res.status(200).json({ publicKey: true, accessToken: true });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false });
     }
   };
@@ -72,7 +73,7 @@ class PaymentsController {
 
       return res.status(200).json({ key, keyType,  name, city, active });
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false });
     }
   }
@@ -97,13 +98,12 @@ class PaymentsController {
 
       return res.status(200).json(response.settingsPayment.methods);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false });
     }
   }
 
   async updatePaymentsMethods(req, res) {
-    console.log(req.body);
     try {
       const companyId = req.headers.companyid;
       const data = req.body;
@@ -123,7 +123,7 @@ class PaymentsController {
 
       return res.status(200).json(response.settingsPayment.methods);
     } catch (error) {
-      console.log(error);
+      LogUtils.errorLogger(error);
       return res.status(400).json({ success: false });
     }
   }
