@@ -29,14 +29,15 @@ export class MenuService {
 
             for (let i = 0; i < option.quantity; i++) {
               priceOption += resultOption.price;
-              complements.push({
-                name: resultOption.name,
-                price: resultOption.price,
-                parentId: option.parentId,
-                quantity: option.quantity,
-                id: resultOption._id,
-              });
             }
+
+            complements.push({
+              name: resultOption.name,
+              price: resultOption.price,
+              parentId: option.parentId,
+              quantity: option.quantity,
+              id: resultOption._id,
+            });
           });
         }
 
