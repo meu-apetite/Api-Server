@@ -6,7 +6,6 @@ import CategoriesModel from '../../models/CategoriesModel.js';
 import { MenuService } from '../../services/MenuService.js';
 import { LogUtils } from '../../utils/LogUtils.js';
 
-
 export class MenuController {
   constructor() {
     this.menuService = new MenuService;

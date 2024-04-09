@@ -36,13 +36,15 @@ export const cartSchema = new Schema({
     zipCode: String,
     position: { latitude: String, longitude: String },
     distance: Number,
+    reference: String,
     price: Number,
     number: Number,
     street: String,
     district: String,
     city: String,
     freeformAddress: String,
-    deliveryOption: String
+    deliveryOption: String,
+    searchMethod: { type: String, enum: ['automatic', 'manual'] }
   },
   client: {
     email: String,
