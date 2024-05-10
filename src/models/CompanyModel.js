@@ -112,7 +112,7 @@ const companySchema = new Schema({
   settingsDelivery: {
     allowStorePickup: { type: Boolean, default: true },
     delivery: { type: Boolean, default: true },
-    deliveryOption: {
+    deliveryOption: { //taxa de delivery
       type: String,
       default: 'customerPickup',
       enum: ['automatic', 'customerPickup', 'fixed'],

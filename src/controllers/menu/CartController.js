@@ -46,26 +46,86 @@ export class CartController {
     }
   };
 
+  setDeliveryType = async (req, res) => {
+    try {
+      const { cartId, deliveryType } = req.body;
+
+      if (deliveryType !== 'delivery' && deliveryType !== 'pickup') {
+        return res.status(400).json({
+          success: false,
+          message: 'Tipo de entrega inválido'
+        });
+      }
+
+      const cart = await CartModel.findById(cartId);
+
+      if (deliveryType === 'delivery') {
+        if (
+          !cart.address.street
+          || !cart.address.district
+          || !cart.address.city
+          || !cart.address.number
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: 'Endereço não encontrado'
+          });
+        }
+      }
+
+      if (deliveryType === 'pickup') {
+        const updateCart = await CartModel.findByIdAndUpdate(
+          cartId,
+          { $set: { deliveryType, total: cart.subtotal, address: {} } },
+          { new: true }
+        ).lean();
+        return res.status(200).json(updateCart);
+      }
+
+      const updateCart = await CartModel.findByIdAndUpdate(
+        cartId,
+        { $set: { deliveryType } },
+        { new: true }
+      ).lean();
+
+      return res.status(200).json(updateCart);
+    } catch (error) {
+      LogUtils.errorLogger(error);
+      return res.status(400).json({
+        success: false,
+        message: 'Erro ao adicionar tipo de entrega'
+      });
+    }
+  };
+
   estimateValue = async (req, res) => {
     try {
       const cart = req.body;
       const estimate = await this.menuService.estimateValue(cart.products);
       const company = await CompanyModel.findById(cart.companyId).select('settingsDelivery');
 
-      estimate.total = estimate.subtotal;
+      if (company.settingsDelivery.deliveryOption === 'fixed') {
+        estimate.total = estimate.subtotal + company.settingsDelivery.fixedValue;
+      } else {
+        estimate.total = estimate.subtotal;
+      }
 
       const cartFind = await CartModel.findById(cart?._id).lean();
 
       if (cartFind?._id) {
+        cartFind.total = estimate.subtotal;
+        cartFind.address = {};
+        
         if (
-          company.settingsDelivery.deliveryOption === 'fixed' 
+          company.settingsDelivery.deliveryOption === 'fixed'
           && cartFind && cartFind.address
         ) {
           cartFind.address.price = company.settingsDelivery.fixedValue;
-        }        
+          estimate.total = estimate.subtotal + cartFind.address.price;
+        }
 
         if (
-          company.settingsDelivery.deliveryOption === 'automatic' 
+          company.settingsDelivery.deliveryOption === 'automatic'
           && typeof cartFind?.address?.price === 'number'
         ) {
           estimate.total = estimate.subtotal + cartFind.address.price;
@@ -134,7 +194,7 @@ export class CartController {
           cartId,
           [
             { $set: { address: addressClient, company: companyId } },
-            { $set: { total: { $add: ["$subtotal", addressClient.price] }} }
+            { $set: { total: { $add: ["$subtotal", addressClient.price] } } }
           ],
           { new: true }
         ).lean();
@@ -143,22 +203,24 @@ export class CartController {
       }
 
       if (company.settingsDelivery.deliveryOption === 'automatic') {
-        if (!addressData?.zipCode) {
-          return res.status(200).json({ address: addressData, addressToken });
-        }
+        let addressClient;
 
-        const addressClient = await this.menuService.calculateDeliveryFee(
-          company.address,
-          addressData,
-          company.settingsDelivery.kmValue,
-          company.settingsDelivery.minValue
-        );
+        if (addressData?.zipCode) {
+          addressClient = await this.menuService.calculateDeliveryFee(
+            company.address,
+            addressData,
+            company.settingsDelivery.kmValue,
+            company.settingsDelivery.minValue
+          );
+        } else {
+          addressClient = this.menuService.addAddressManual(addressData);
+        }
 
         const updateCart = await CartModel.findByIdAndUpdate(
           cartId,
           [
             { $set: { address: addressClient, company: companyId } },
-            { $set: { total: { $add: ["$subtotal", addressClient.price] }} }
+            { $set: { total: { $add: ["$subtotal", addressClient.price] } } }
           ],
           { new: true }
         ).lean();
@@ -173,7 +235,7 @@ export class CartController {
   getPaymentOptions = async (req, res) => {
     try {
       const { companyId, cartId } = req.body;
-      const company = await CompanyModel.findById(companyId, 'settingsPayment');
+      const company = await CompanyModel.findById(companyId, 'settingsPayment fantasyName');
       const cart = await CartModel.findById(cartId, 'total');
       let pix = null;
 
@@ -185,7 +247,7 @@ export class CartController {
       if (company.settingsPayment.pix.active) {
         pix = new PixService(
           company.settingsPayment.pix.key,
-          `Pedido loja ${company.fantasyName}`,
+          `Pedido loja ${company.fantasyName} - Meu apetite`,
           company.settingsPayment.pix.name,
           company.settingsPayment.pix.city,
           '1',
@@ -196,8 +258,8 @@ export class CartController {
       return res.status(200).json({
         inDelivery: { active: true, methods: company.settingsPayment.methods },
         mercadoPago: { active: false, preferenceId: '' },
-        pix: { 
-          active: company.settingsPayment.pix.active, 
+        pix: {
+          active: company.settingsPayment.pix.active,
           code: pix ? pix.getPayload() : null
         },
       });
@@ -234,9 +296,22 @@ export class CartController {
       }
 
       cart = await CartModel.findById(cartId).lean().exec();
+
       company = await CompanyModel.findById(companyId)
         .select('fantasyName custom address subscription storeUrl settingsPayment email whatsapp')
         .lean();
+
+      if (deliveryType !== 'pickup' && (
+        !cart?.address?.street
+        || !cart?.address?.number
+        || !cart?.address?.city
+        || !cart?.address?.district
+      )) {
+        return res.status(400).json({
+          success: false,
+          message: 'Endereço de entrega não informado ou incompleto',
+        });
+      }
 
       const productIds = new Set(cart.products.map((cartProduct) => cartProduct.productId));
       const products = await ProductsModel.find({ company: companyId, _id: { $in: Array.from(productIds) } })
@@ -269,7 +344,7 @@ export class CartController {
 
       if (paymentType === 'online' && paymentMethod === 'pix') {
         orderRequest.status.name = 'WaitingForPaymentConfirmation';
-        orderRequest.status.label = 'Aguardando Confirmação de Pagamento';
+        orderRequest.status.label = 'Aguardando Pagamento';
       }
 
       delete orderRequest._id;

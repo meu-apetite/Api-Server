@@ -13,19 +13,19 @@ export class MenuService {
           .populate({ path: 'complements', select: '-company' })
           .select('name price images.url')
           .exec();
-          
-          let priceOption = 0;
-          let price = 0;
-          const complements = [];
-          
-          if (product?.complements?.length > 0) {
-            item.complements.map((option) => {
-              const resultComplements = product.complements.find(
-                (complement) => complement._id.toString() == option.parentId
-              );
-              const resultOption = resultComplements.options.find(
-                (o) => o._id == option.id
-              );
+
+        let priceOption = 0;
+        let price = 0;
+        const complements = [];
+
+        if (product?.complements?.length > 0) {
+          item.complements.map((option) => {
+            const resultComplements = product.complements.find(
+              (complement) => complement._id.toString() == option.parentId
+            );
+            const resultOption = resultComplements.options.find(
+              (o) => o._id == option.id
+            );
 
             for (let i = 0; i < option.quantity; i++) {
               priceOption += resultOption.price;
@@ -44,6 +44,7 @@ export class MenuService {
         for (let i = 0; i < item.quantity; i++) {
           price += product.price + priceOption;
         }
+
         priceTotal += price;
 
         requestInfo.push({
@@ -92,11 +93,31 @@ export class MenuService {
         district: address.address.municipalitySubdivision,
         city: address.address.municipality,
         freeformAddress: address.address.freeformAddress,
-        deliveryOption: 'automatic'
+        deliveryOption: 'automatic',
+        searchMethod: 'automatic'
       };
     } catch (error) {
       throw new Error('Erro ao calcular o frete');
     }
+  }
+
+  async addAddressManual(addressClient) {
+    if (!addressClient?.street) throw new Error('Rua não informada');
+    if (!addressClient?.district) throw new Error('Bairro não informado');
+    if (!addressClient?.city) throw new Error('Cidade não informada');
+    if (!addressClient?.number) throw new Error('Número da casa não informado');
+    if (!addressClient?.reference) throw new Error('Referência de endereço não informada');
+
+    return {
+      zipCode: addressClient?.zipCode,
+      number: addressClient.number,
+      street: addressClient.street,
+      district: addressClient.disctrict,
+      city: addressClient.city,
+      reference: addressClient.reference,
+      deliveryOption: 'automatic',
+      searchMethod: 'manual'
+    };
   }
 
   calculateOrder(productsToken, addressToken) {
