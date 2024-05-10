@@ -76,7 +76,7 @@ export class CartController {
       if (deliveryType === 'pickup') {
         const updateCart = await CartModel.findByIdAndUpdate(
           cartId,
-          { $set: { deliveryType, total: cart.subtotal, address: null } },
+          { $set: { deliveryType, total: cart.subtotal, address: {} } },
           { new: true }
         ).lean();
         return res.status(200).json(updateCart);
@@ -235,7 +235,7 @@ export class CartController {
   getPaymentOptions = async (req, res) => {
     try {
       const { companyId, cartId } = req.body;
-      const company = await CompanyModel.findById(companyId, 'settingsPayment');
+      const company = await CompanyModel.findById(companyId, 'settingsPayment fantasyName');
       const cart = await CartModel.findById(cartId, 'total');
       let pix = null;
 
@@ -247,7 +247,7 @@ export class CartController {
       if (company.settingsPayment.pix.active) {
         pix = new PixService(
           company.settingsPayment.pix.key,
-          `Pedido loja ${company.fantasyName}`,
+          `Pedido loja ${company.fantasyName} - Meu apetite`,
           company.settingsPayment.pix.name,
           company.settingsPayment.pix.city,
           '1',
@@ -344,7 +344,7 @@ export class CartController {
 
       if (paymentType === 'online' && paymentMethod === 'pix') {
         orderRequest.status.name = 'WaitingForPaymentConfirmation';
-        orderRequest.status.label = 'Aguardando Confirmação de Pagamento';
+        orderRequest.status.label = 'Aguardando Pagamento';
       }
 
       delete orderRequest._id;
