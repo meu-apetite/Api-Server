@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-const localUri = 'mongodb://localhost:27017/meuapetite';
+const uri = "mongodb+srv://test:gg83111761@cluster0.wz1xy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-mongoose.connect(localUri, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('mongodb: ok'))
   .catch((error) => console.error('Error conn mongodb:', error));
